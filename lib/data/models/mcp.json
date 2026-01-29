@@ -1,0 +1,9 @@
+
+{
+  "mcpServers": {
+    "imagekit_api": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://api-mcp.imagekit.in/sse"]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+# Flutter build artifacts
+/build/
+/.dart_tool/
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/.packages
+/.pub-cache/
+/.pub/
+/pubspec.lock
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Android
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle/
+/android/captures/
+/android/gradle/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+*.jks
+*.keystore
+
+# iOS
+/ios/Flutter/.last_build_id
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/engine
+/ios/Pods/
+/ios/.symlinks/
+/ios/ServiceDefinitions.json
+/ios/Runner/GeneratedPluginRegistrant.*
+
+# Web (keep source, remove builds)
+/build/web/
+
+# Secrets
+.env
+.env.local
+*.pem
+
+# Vercel
+.vercel
+
+# Flutter installation
+/flutter/
