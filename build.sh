@@ -1,33 +1,47 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Flutter Web Build..."
+echo "🚀 Starting Robust Flutter Web Build..."
 
-# Setup Flutter
-FLUTTER_PATH="$(pwd)/flutter/bin"
-export PATH="$FLUTTER_PATH:$PATH"
+# 1. Environment Info
+echo "📂 Current Directory: $(pwd)"
+echo "🌍 OS: $(uname -a)"
+
+# 2. Install Flutter via Tarball (Reliable & Permanent)
+FLUTTER_VERSION="3.29.0" # Latest Stable as of now
+FLUTTER_TAR="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
+FLUTTER_URL="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/$FLUTTER_TAR"
 
 if [ ! -d "flutter" ]; then
-    echo "📦 Cloning Flutter repository (branch: ${FLUTTER_VERSION:-stable})..."
-    git clone https://github.com/flutter/flutter.git -b "${FLUTTER_VERSION:-stable}" --depth 1
+    echo "📦 Downloading Flutter SDK v$FLUTTER_VERSION..."
+    curl -o $FLUTTER_TAR $FLUTTER_URL
+    echo "📦 Extracting Flutter..."
+    tar xf $FLUTTER_TAR
+    rm $FLUTTER_TAR
 fi
 
-echo "🔍 Flutter environment info:"
-flutter --version
-which flutter
+# 3. Setup PATH
+export PATH="$(pwd)/flutter/bin:$PATH"
+echo "🔍 Flutter Path: $(which flutter)"
 
+# 4. Configure & Precache
 echo "🔧 Configuring Flutter..."
 flutter config --no-analytics
 flutter config --enable-web
+flutter doctor -v
 
-echo "📚 Getting dependencies..."
+echo "📦 Pre-downloading Web artifacts..."
+flutter precache --web
+
+# 5. Dependencies
+echo "📚 Resolving Dependencies..."
 flutter pub get
 
-echo "🏗️ Building Flutter Web..."
-# We use the full path to flutter to avoid any ambiguity
-# We also try to build without explicit renderer first if this persists, 
-# but canvaskit is preferred for the admin panel.
-"$(pwd)/flutter/bin/flutter" build web --release --web-renderer canvaskit --base-href / --target lib/main_web.dart
+# 6. The Build
+echo "🏗️ Building Flutter Web (Target: lib/main_web.dart)..."
+# We remove the renderer flag for a moment to ensure basic build works, 
+# then we can add it back if needed. Flutter defaults well.
+flutter build web --release --base-href / --target lib/main_web.dart
 
-echo "✅ Build complete! Folder: build/web"
+echo "✅ Build Successful!"
 ls -la build/web
