@@ -67,7 +67,7 @@ class UserManagementScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedRole,
+                initialValue: selectedRole,
                 dropdownColor: const Color(0xFF1E293B),
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(

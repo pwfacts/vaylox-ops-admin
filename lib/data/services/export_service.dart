@@ -62,9 +62,8 @@ class ExportService {
     sheet1.appendRow(headers);
     for (var i = 0; i < headers.length; i++) {
       sheet1
-              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-              .cellStyle =
-          headerStyle;
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .cellStyle = headerStyle;
     }
 
     for (var slip in slips) {
@@ -82,7 +81,7 @@ class ExportService {
         TextCellValue(
           slip.otPay > 0
               ? (slip.otPay / (slip.basicPay / slip.totalWorkingDays))
-                    .toStringAsFixed(1)
+                  .toStringAsFixed(1)
               : '0',
         ),
         DoubleCellValue(slip.basicPay),
@@ -122,9 +121,8 @@ class ExportService {
     sheet2.appendRow(bankHeaders);
     for (var i = 0; i < bankHeaders.length; i++) {
       sheet2
-              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-              .cellStyle =
-          headerStyle;
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .cellStyle = headerStyle;
     }
 
     int serial = 1;

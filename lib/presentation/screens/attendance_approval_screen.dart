@@ -29,7 +29,7 @@ class _AttendanceApprovalScreenState
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: list.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                separatorBuilder: (context, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = list[index];
                   return _buildApprovalCard(item);
@@ -54,7 +54,7 @@ class _AttendanceApprovalScreenState
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
+              errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.image_not_supported, size: 100),
             ),
           Padding(
@@ -135,14 +135,11 @@ class _AttendanceApprovalScreenState
         );
       } else {
         // Implement rejection if needed (status = 'REJECTED')
-        await SupabaseService().client
-            .from('attendance')
-            .update({
-              'approval_status': 'REJECTED',
-              'approved_by': currentUserId,
-              'approved_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', id);
+        await SupabaseService().client.from('attendance').update({
+          'approval_status': 'REJECTED',
+          'approved_by': currentUserId,
+          'approved_at': DateTime.now().toIso8601String(),
+        }).eq('id', id);
       }
 
       ref.invalidate(pendingApprovalsProvider);
@@ -163,5 +160,5 @@ class _AttendanceApprovalScreenState
 
 final pendingApprovalsProvider =
     FutureProvider.family<List<Attendance>, String>((ref, unitId) async {
-      return ref.read(attendanceRepositoryProvider).getPendingApprovals(unitId);
-    });
+  return ref.read(attendanceRepositoryProvider).getPendingApprovals(unitId);
+});

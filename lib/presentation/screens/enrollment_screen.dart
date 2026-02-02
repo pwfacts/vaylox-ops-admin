@@ -89,9 +89,8 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
       phone: _phoneController.text,
       emergencyContact: _emergencyContactController.text,
       aadharNumber: _aadharNumberController.text,
-      panNumber: _panNumberController.text.isEmpty
-          ? null
-          : _panNumberController.text,
+      panNumber:
+          _panNumberController.text.isEmpty ? null : _panNumberController.text,
       dateOfBirth: _dob!,
       assignedUnitId: _selectedUnitId ?? 'placeholder_unit_id',
       assignedUnitCode: 'PH',
@@ -176,13 +175,11 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
                         if (date != null) setState(() => _dob = date);
                       },
                     ),
-
                     const SizedBox(height: 24),
                     _buildSectionHeader('Documents'),
                     _buildDocPicker('Aadhar Front', 'aadhar_front'),
                     _buildDocPicker('Aadhar Back', 'aadhar_back'),
                     _buildDocPicker('PAN Card', 'pan_card'),
-
                     const SizedBox(height: 24),
                     _buildSectionHeader('Employment Details'),
                     TextFormField(
@@ -217,7 +214,6 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
                       keyboardType: TextInputType.number,
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                     ),
-
                     const SizedBox(height: 24),
                     _buildSectionHeader('Payroll Toggles'),
                     SwitchListTile(
@@ -238,7 +234,6 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
                       value: _isEsicEnabled,
                       onChanged: (v) => setState(() => _isEsicEnabled = v),
                     ),
-
                     const SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,

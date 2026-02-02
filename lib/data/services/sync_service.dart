@@ -9,15 +9,15 @@ import '../models/attendance_model.dart';
 class SyncService {
   final LocalDatabaseService _localDb = LocalDatabaseService();
   final AttendanceRepository _attendanceRepo = AttendanceRepository();
-  StreamSubscription<ConnectivityResult>? _subscription;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
   bool _isSyncing = false;
 
   void start() {
     debugPrint('Sync Service Started');
     _subscription = Connectivity().onConnectivityChanged.listen((
-      ConnectivityResult result,
+      List<ConnectivityResult> results,
     ) {
-      if (result != ConnectivityResult.none) {
+      if (results.isNotEmpty && !results.contains(ConnectivityResult.none)) {
         _triggerSync();
       }
     });
