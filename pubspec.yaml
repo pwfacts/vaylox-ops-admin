@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.2.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -38,28 +38,28 @@ dependencies:
   sqflite: ^2.4.2
   path: ^1.9.1
   google_mlkit_face_detection: ^0.13.1
-  camera: ^0.10.5+5
-  geolocator: ^10.1.0
-  geocoding: ^2.1.1
+  camera: ^0.11.3
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
   google_maps_flutter: ^2.5.0
-  connectivity_plus: ^5.0.2
+  connectivity_plus: ^7.0.0
   image_picker: ^1.2.1
-  image_cropper: ^9.0.0
-  animate_do: ^3.1.2
+  image_cropper: ^11.0.0
+  animate_do: ^4.2.0
   shimmer: ^3.0.0
-  lottie: ^2.7.0
+  lottie: ^3.3.0
   flutter_animate: ^4.3.0
-  flutter_riverpod: ^2.4.9
-  intl: ^0.18.1
+  flutter_riverpod: ^3.2.0
+  intl: ^0.20.2
   logger: ^2.6.2
   uuid: ^4.2.1
   path_provider: ^2.1.5
   excel: ^4.0.0
-  share_plus: ^10.1.0
+  share_plus: ^12.0.1
   open_filex: ^4.5.0
   pdf: ^3.11.1
   printing: ^5.13.2
-  syncfusion_flutter_charts: ^28.1.33
+  syncfusion_flutter_charts: ^32.1.25
   encrypt: ^5.0.3
   http: ^1.2.1
   dio: ^5.4.0
