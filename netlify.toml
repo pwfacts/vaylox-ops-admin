@@ -2,8 +2,7 @@
   command = "chmod +x build.sh && ./build.sh"
   publish = "build/web"
 
-[build.environment]
-  FLUTTER_VERSION = "3.29.0"
+
 
 # SPA Routing: Redirect all routes to index.html so Flutter can handle internal routing
 [[redirects]]

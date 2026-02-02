@@ -2,7 +2,7 @@
 set -e
 
 # --- CONFIGURATION ---
-FLUTTER_VERSION="3.29.0"
+FLUTTER_VERSION="3.38.9"
 FLUTTER_CHANNEL="stable"
 SDK_TAR="flutter_linux_${FLUTTER_VERSION}-${FLUTTER_CHANNEL}.tar.xz"
 SDK_URL="https://storage.googleapis.com/flutter_infra_release/releases/${FLUTTER_CHANNEL}/linux/${SDK_TAR}"
