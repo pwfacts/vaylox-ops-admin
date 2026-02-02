@@ -1,50 +1,44 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Robust Flutter Web Build..."
+# --- CONFIGURATION ---
+FLUTTER_VERSION="3.29.0"
+FLUTTER_CHANNEL="stable"
+SDK_TAR="flutter_linux_${FLUTTER_VERSION}-${FLUTTER_CHANNEL}.tar.xz"
+SDK_URL="https://storage.googleapis.com/flutter_infra_release/releases/${FLUTTER_CHANNEL}/linux/${SDK_TAR}"
 
-# 1. Environment Info
-echo "📂 Current Directory: $(pwd)"
-echo "🌍 OS: $(uname -a)"
+echo "🏗️ [CI] Starting Production Web Build..."
+echo "📍 Workspace: $(pwd)"
 
-# 2. Install Flutter via Tarball (Reliable & Permanent)
-FLUTTER_VERSION="3.29.0" # Latest Stable as of now
-FLUTTER_TAR="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
-FLUTTER_URL="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/$FLUTTER_TAR"
-
+# --- SDK SETUP ---
 if [ ! -d "flutter" ]; then
-    echo "📦 Downloading Flutter SDK v$FLUTTER_VERSION..."
-    curl -o $FLUTTER_TAR $FLUTTER_URL
-    echo "📦 Extracting Flutter..."
-    tar xf $FLUTTER_TAR
-    rm $FLUTTER_TAR
+    echo "⬇️ Downloading Flutter SDK v${FLUTTER_VERSION}..."
+    curl -o $SDK_TAR $SDK_URL
+    echo "📦 Extracting SDK..."
+    tar xf $SDK_TAR
+    rm $SDK_TAR
 fi
 
-# 3. Setup PATH
+# Prepend SDK to path
 export PATH="$(pwd)/flutter/bin:$PATH"
-echo "🔍 Flutter Path: $(which flutter)"
 
-# 4. Configure & Precache
-echo "🔧 Configuring Flutter..."
+echo "🧪 Verifying SDK Environment..."
+flutter --version
+
+# --- OPTIMIZATION ---
+echo "⚙️ Configuring Build Flags..."
 flutter config --no-analytics
-flutter config --enable-web
-flutter doctor -v
-
-echo "📦 Pre-downloading Web artifacts..."
 flutter precache --web
 
-# 5. Clean & Dependencies
-echo "🧹 Cleaning previous builds..."
-flutter clean
-
+# --- DEPENDENCIES ---
 echo "📚 Resolving Dependencies..."
 flutter pub get
 
-# 6. The Build
-echo "🏗️ Building Flutter Web (Target: lib/main_web.dart)..."
-# We remove the renderer flag for a moment to ensure basic build works, 
-# then we can add it back if needed. Flutter defaults well.
-flutter build web --release --base-href / --target lib/main_web.dart
+# --- BUILD ---
+echo "🚀 Compiling Web Assembly & JS..."
+# We use canvaskit for the admin portal to ensure pixel-perfect chart rendering (Syncfusion)
+flutter build web --release --web-renderer canvaskit --base-href / --target lib/main_web.dart
 
-echo "✅ Build Successful!"
-ls -la build/web
+# --- POST-BUILD ---
+echo "✅ Build Completed Successfully."
+ls -R build/web | head -n 20

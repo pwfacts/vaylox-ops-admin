@@ -3,10 +3,19 @@
   publish = "build/web"
 
 [build.environment]
-  FLUTTER_VERSION = "stable"
+  FLUTTER_VERSION = "3.29.0"
 
+# SPA Routing: Redirect all routes to index.html so Flutter can handle internal routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = true
+
+# Security Headers (Optional but recommended for Admin Portals)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "upgrade-insecure-requests"
