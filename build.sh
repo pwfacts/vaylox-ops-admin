@@ -4,38 +4,30 @@ set -e
 echo "🚀 Starting Flutter Web Build..."
 
 # Setup Flutter
-# We prepend the path to ensure our version takes priority over any system-installed version
-export PATH="$(pwd)/flutter/bin:$PATH"
+FLUTTER_PATH="$(pwd)/flutter/bin"
+export PATH="$FLUTTER_PATH:$PATH"
 
 if [ ! -d "flutter" ]; then
-    echo "📦 Cloning Flutter repository..."
-    # If FLUTTER_VERSION is set, use it. Otherwise, use stable.
-    if [ -n "$FLUTTER_VERSION" ]; then
-        echo "   Targeting version: $FLUTTER_VERSION"
-        git clone https://github.com/flutter/flutter.git -b "$FLUTTER_VERSION" --depth 1
-    else
-        echo "   Targeting stable branch"
-        git clone https://github.com/flutter/flutter.git -b stable --depth 1
-    fi
+    echo "📦 Cloning Flutter repository (branch: ${FLUTTER_VERSION:-stable})..."
+    git clone https://github.com/flutter/flutter.git -b "${FLUTTER_VERSION:-stable}" --depth 1
 fi
 
-echo "🔍 Checking Flutter version..."
+echo "🔍 Flutter environment info:"
 flutter --version
-
-# Pre-download artifacts to avoid network issues during build
-echo "📦 Downloading Flutter artifacts..."
-flutter precache --web
+which flutter
 
 echo "🔧 Configuring Flutter..."
+flutter config --no-analytics
 flutter config --enable-web
 
 echo "📚 Getting dependencies..."
 flutter pub get
 
 echo "🏗️ Building Flutter Web..."
-# Using the main_web.dart as entry point for the Admin Portal
-# If --web-renderer fails, it's usually because the Flutter version is too old
-# but since we're cloning stable/3.10.4+, it should work.
-flutter build web --release --web-renderer canvaskit --base-href / --target lib/main_web.dart
+# We use the full path to flutter to avoid any ambiguity
+# We also try to build without explicit renderer first if this persists, 
+# but canvaskit is preferred for the admin panel.
+"$(pwd)/flutter/bin/flutter" build web --release --web-renderer canvaskit --base-href / --target lib/main_web.dart
 
 echo "✅ Build complete! Folder: build/web"
+ls -la build/web
