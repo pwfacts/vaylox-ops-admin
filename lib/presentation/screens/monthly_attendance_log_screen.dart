@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../core/theme/app_colors.dart';
 import '../../data/models/attendance_model.dart';
 import '../../data/services/supabase_service.dart';
 
@@ -33,9 +32,17 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${DateFormat('MMMM yyyy').format(DateTime(year, month))}', 
-                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  Text('${records.length} Duty Logs', style: const TextStyle(color: Colors.blueAccent)),
+                  Text(
+                    DateFormat('MMMM yyyy').format(DateTime(year, month)),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    '${records.length} Duty Logs',
+                    style: const TextStyle(color: Colors.blueAccent),
+                  ),
                 ],
               ),
             ),
@@ -58,20 +65,22 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
   }
 
   Widget _buildLogCard(Attendance record) {
-    final bool isOt = record.type == AttendanceType.OT;
-    
+    final bool isOt = record.type == AttendanceType.ot;
+
     return Card(
-      margin: const EdgeInsets.bottom(12),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
-          backgroundColor: isOt ? Colors.orange.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+          backgroundColor: isOt
+              ? Colors.orange.withAlpha(26)
+              : Colors.blue.withAlpha(26),
           child: Text(
             DateFormat('dd').format(record.attendanceDate),
             style: TextStyle(
-              fontWeight: FontWeight.bold, 
-              color: isOt ? Colors.orange : Colors.blueAccent
+              fontWeight: FontWeight.bold,
+              color: isOt ? Colors.orange : Colors.blueAccent,
             ),
           ),
         ),
@@ -82,10 +91,16 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withAlpha(13),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(record.shift.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+              child: Text(
+                record.shift.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -99,7 +114,7 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    record.unitName ?? 'Main Unit', 
+                    record.unitName ?? 'Main Unit',
                     style: TextStyle(
                       color: isOt ? Colors.orange : Colors.grey[400],
                       fontWeight: isOt ? FontWeight.bold : FontWeight.normal,
@@ -109,30 +124,42 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
               ],
             ),
             if (record.checkInTime != null)
-              Text('In: ${DateFormat('hh:mm a').format(record.checkInTime!)}', style: const TextStyle(fontSize: 12)),
+              Text(
+                'In: ${DateFormat('hh:mm a').format(record.checkInTime!)}',
+                style: const TextStyle(fontSize: 12),
+              ),
           ],
         ),
-        trailing: isOt 
-          ? const Tooltip(message: 'OT Duty at Different Unit', child: Icon(Icons.bolt, color: Colors.orange))
-          : null,
+        trailing: isOt
+            ? const Tooltip(
+                message: 'OT Duty at Different Unit',
+                child: Icon(Icons.bolt, color: Colors.orange),
+              )
+            : null,
       ),
     );
   }
 }
 
-final guardAttendanceLogProvider = FutureProvider.family<List<Attendance>, MonthlyAttendanceLogScreen>((ref, params) async {
-  final client = SupabaseService().client;
-  final startDate = DateTime(params.year, params.month, 1);
-  final endDate = DateTime(params.year, params.month + 1, 0);
+final guardAttendanceLogProvider =
+    FutureProvider.family<List<Attendance>, MonthlyAttendanceLogScreen>((
+      ref,
+      params,
+    ) async {
+      final client = SupabaseService().client;
+      final startDate = DateTime(params.year, params.month, 1);
+      final endDate = DateTime(params.year, params.month + 1, 0);
 
-  final response = await client
-      .from('attendance')
-      .select('*, units(name)')
-      .eq('guard_id', params.guardId)
-      .eq('approval_status', 'APPROVED')
-      .gte('attendance_date', startDate.toIso8601String().split('T')[0])
-      .lte('attendance_date', endDate.toIso8601String().split('T')[0])
-      .order('attendance_date', ascending: true);
+      final response = await client
+          .from('attendance')
+          .select('*, units(name)')
+          .eq('guard_id', params.guardId)
+          .eq('approval_status', 'APPROVED')
+          .gte('attendance_date', startDate.toIso8601String().split('T')[0])
+          .lte('attendance_date', endDate.toIso8601String().split('T')[0])
+          .order('attendance_date', ascending: true);
 
-  return (response as List).map((json) => Attendance.fromJson(json)).toList();
-});
+      return (response as List)
+          .map((json) => Attendance.fromJson(json))
+          .toList();
+    });

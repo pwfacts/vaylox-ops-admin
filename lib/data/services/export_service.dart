@@ -15,7 +15,7 @@ class ExportService {
     required int year,
   }) async {
     final excel = Excel.createExcel();
-    
+
     // 1. Detailed Salary Register Sheet
     final Sheet sheet1 = excel['Salary Register'];
     excel.delete('Sheet1'); // Remove default sheet
@@ -23,84 +23,122 @@ class ExportService {
     // Header styling
     final CellStyle headerStyle = CellStyle(
       bold: true,
-      backgroundColorHex: '#E0E0E0',
+      backgroundColorHex: ExcelColor.fromHexString('#E0E0E0'),
       fontFamily: getFontFamily(FontFamily.Arial),
     );
 
-    final List<String> headers = [
-      'Guard Code', 'Full Name', 'Designation', 
-      'Bank Name', 'A/C Number', 'IFSC',
-      'Target Days', 'Present Days', 'OT Days',
-      'Basic Rate', 'Earned Basic', 'OT Pay', 'HRA', 'Other Earnings',
-      'Gross Pay',
-      'PF (12%)', 'ESIC (0.75%)', 'PT', 'LWF',
-      'Advance', 'Penalty', 'Canteen', 'Uniform', 'Other Ded 1', 'Other Ded 2',
-      'Total Deductions', 'Net Payable',
-      'Audit Note', 'Override By'
+    final List<CellValue?> headers = [
+      TextCellValue('Guard Code'),
+      TextCellValue('Full Name'),
+      TextCellValue('Designation'),
+      TextCellValue('Bank Name'),
+      TextCellValue('A/C Number'),
+      TextCellValue('IFSC'),
+      TextCellValue('Target Days'),
+      TextCellValue('Present Days'),
+      TextCellValue('OT Days'),
+      TextCellValue('Basic Rate'),
+      TextCellValue('Earned Basic'),
+      TextCellValue('OT Pay'),
+      TextCellValue('HRA'),
+      TextCellValue('Other Earnings'),
+      TextCellValue('Gross Pay'),
+      TextCellValue('PF (12%)'),
+      TextCellValue('ESIC (0.75%)'),
+      TextCellValue('PT'),
+      TextCellValue('LWF'),
+      TextCellValue('Advance'),
+      TextCellValue('Penalty'),
+      TextCellValue('Canteen'),
+      TextCellValue('Uniform'),
+      TextCellValue('Other Ded 1'),
+      TextCellValue('Other Ded 2'),
+      TextCellValue('Total Deductions'),
+      TextCellValue('Net Payable'),
+      TextCellValue('Audit Note'),
+      TextCellValue('Override By'),
     ];
 
     sheet1.appendRow(headers);
     for (var i = 0; i < headers.length; i++) {
-       sheet1.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0)).cellStyle = headerStyle;
+      sheet1
+              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+              .cellStyle =
+          headerStyle;
     }
 
     for (var slip in slips) {
       final guard = guards.firstWhere((g) => g.id == slip.guardId);
-      
+
       sheet1.appendRow([
-        guard.guardCode,
-        guard.fullName,
-        guard.designation,
-        guard.bankName ?? '-',
-        guard.accountNumber ?? '-',
-        guard.ifscCode ?? '-',
-        slip.totalWorkingDays,
-        slip.presentDays,
-        slip.otPay > 0 ? (slip.otPay / (slip.basicPay / slip.totalWorkingDays)).toStringAsFixed(1) : '0',
-        slip.basicPay,
-        slip.earnedBasic,
-        slip.otPay,
-        slip.hra,
-        slip.otherEarnings,
-        slip.grossPay,
-        slip.pfDeduction,
-        slip.esicDeduction,
-        slip.ptDeduction,
-        slip.lwfDeduction,
-        slip.advanceDeduction,
-        slip.penaltyDeduction,
-        slip.canteenDeduction,
-        slip.uniformDeduction,
-        slip.otherDed1,
-        slip.otherDed2,
-        slip.totalDeductions,
-        slip.netPay,
-        slip.manualOverrideNote ?? '',
-        slip.manualOverrideBy ?? '',
+        TextCellValue(guard.guardCode),
+        TextCellValue(guard.fullName),
+        TextCellValue(guard.designation),
+        TextCellValue(guard.bankName ?? '-'),
+        TextCellValue(guard.accountNumber ?? '-'),
+        TextCellValue(guard.ifscCode ?? '-'),
+        IntCellValue(slip.totalWorkingDays),
+        IntCellValue(slip.presentDays),
+        TextCellValue(
+          slip.otPay > 0
+              ? (slip.otPay / (slip.basicPay / slip.totalWorkingDays))
+                    .toStringAsFixed(1)
+              : '0',
+        ),
+        DoubleCellValue(slip.basicPay),
+        DoubleCellValue(slip.earnedBasic),
+        DoubleCellValue(slip.otPay),
+        DoubleCellValue(slip.hra),
+        DoubleCellValue(slip.otherEarnings),
+        DoubleCellValue(slip.grossPay),
+        DoubleCellValue(slip.pfDeduction),
+        DoubleCellValue(slip.esicDeduction),
+        DoubleCellValue(slip.ptDeduction),
+        DoubleCellValue(slip.lwfDeduction),
+        DoubleCellValue(slip.advanceDeduction),
+        DoubleCellValue(slip.penaltyDeduction),
+        DoubleCellValue(slip.canteenDeduction),
+        DoubleCellValue(slip.uniformDeduction),
+        DoubleCellValue(slip.otherDed1),
+        DoubleCellValue(slip.otherDed2),
+        DoubleCellValue(slip.totalDeductions),
+        DoubleCellValue(slip.netPay),
+        TextCellValue(slip.manualOverrideNote ?? ''),
+        TextCellValue(slip.manualOverrideBy ?? ''),
       ]);
     }
 
     // 2. Bank Transfer List Sheet
     final Sheet sheet2 = excel['Bank Transfer List'];
-    final List<String> bankHeaders = [
-      'S.No', 'Employee Name', 'Account Number', 'IFSC Code', 'Amount', 'Remarks'
+    final List<CellValue?> bankHeaders = [
+      TextCellValue('S.No'),
+      TextCellValue('Employee Name'),
+      TextCellValue('Account Number'),
+      TextCellValue('IFSC Code'),
+      TextCellValue('Amount'),
+      TextCellValue('Remarks'),
     ];
-    
+
     sheet2.appendRow(bankHeaders);
     for (var i = 0; i < bankHeaders.length; i++) {
-       sheet2.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0)).cellStyle = headerStyle;
+      sheet2
+              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+              .cellStyle =
+          headerStyle;
     }
 
     int serial = 1;
     for (var slip in slips) {
       final guard = guards.firstWhere((g) => g.id == slip.guardId);
       sheet2.appendRow([
-        serial++,
-        guard.fullName,
-        guard.accountNumber ?? '-',
-        guard.ifscCode ?? '-',
-        slip.netPay,
-        'Salary ${DateFormat('MMM yyyy').format(DateTime(year, month))}'
+        IntCellValue(serial++),
+        TextCellValue(guard.fullName),
+        TextCellValue(guard.accountNumber ?? '-'),
+        TextCellValue(guard.ifscCode ?? '-'),
+        DoubleCellValue(slip.netPay),
+        TextCellValue(
+          'Salary ${DateFormat('MMM yyyy').format(DateTime(year, month))}',
+        ),
       ]);
     }
 
@@ -108,12 +146,15 @@ class ExportService {
     final fileBytes = excel.save();
     if (fileBytes == null) return;
 
-    final fileName = 'Payroll_${unitName.replaceAll(' ', '_')}_${DateFormat('MMM_yyyy').format(DateTime(year, month))}.xlsx';
-    
+    final fileName =
+        'Payroll_${unitName.replaceAll(' ', '_')}_${DateFormat('MMM_yyyy').format(DateTime(year, month))}.xlsx';
+
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(fileBytes);
 
-    await Share.shareXFiles([XFile(file.path)], text: 'Monthly Payroll for $unitName');
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], text: 'Monthly Payroll for $unitName');
   }
 }

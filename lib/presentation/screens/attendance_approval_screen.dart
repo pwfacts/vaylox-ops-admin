@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../core/theme/app_colors.dart';
 import '../../data/models/attendance_model.dart';
-import '../../data/repositories/attendance_repository.dart';
 import '../../data/services/supabase_service.dart';
 import '../providers/attendance_provider.dart';
 
@@ -13,10 +11,12 @@ class AttendanceApprovalScreen extends ConsumerStatefulWidget {
   const AttendanceApprovalScreen({super.key, required this.unitId});
 
   @override
-  ConsumerState<AttendanceApprovalScreen> createState() => _AttendanceApprovalScreenState();
+  ConsumerState<AttendanceApprovalScreen> createState() =>
+      _AttendanceApprovalScreenState();
 }
 
-class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScreen> {
+class _AttendanceApprovalScreenState
+    extends ConsumerState<AttendanceApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     final pendingAsync = ref.watch(pendingApprovalsProvider(widget.unitId));
@@ -29,7 +29,7 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = list[index];
                   return _buildApprovalCard(item);
@@ -54,7 +54,8 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 100),
+              errorBuilder: (_, _, _) =>
+                  const Icon(Icons.image_not_supported, size: 100),
             ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -63,18 +64,30 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
               children: [
                 Text(
                   'Guard ID: ${attendance.guardId}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text('Reason: ${attendance.fallbackReason?.name.replaceAll('_', ' ')}'),
+                Text(
+                  'Reason: ${attendance.fallbackReason?.name.replaceAll('_', ' ')}',
+                ),
                 if (attendance.fallbackReasonText != null)
-                  Text('Note: ${attendance.fallbackReasonText}', style: const TextStyle(fontStyle: FontStyle.italic)),
+                  Text(
+                    'Note: ${attendance.fallbackReasonText}',
+                    style: const TextStyle(fontStyle: FontStyle.italic),
+                  ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 16, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text(DateFormat('hh:mm a, dd MMM').format(attendance.createdAt)),
+                    Text(
+                      DateFormat(
+                        'hh:mm a, dd MMM',
+                      ).format(attendance.createdAt),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -83,7 +96,9 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _handleAction(attendance.id, false),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
                         child: const Text('Reject'),
                       ),
                     ),
@@ -91,7 +106,9 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => _handleAction(attendance.id, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
                         child: const Text('Approve'),
                       ),
                     ),
@@ -109,18 +126,25 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
     try {
       final repo = ref.read(attendanceRepositoryProvider);
       final currentUserId = SupabaseService().currentUser!.id;
-      
+
       if (approve) {
-        await repo.approveAttendance(id, currentUserId, 'Approved via mobile app');
+        await repo.approveAttendance(
+          id,
+          currentUserId,
+          'Approved via mobile app',
+        );
       } else {
         // Implement rejection if needed (status = 'REJECTED')
-        await SupabaseService().client.from('attendance').update({
-          'approval_status': 'REJECTED',
-          'approved_by': currentUserId,
-          'approved_at': DateTime.now().toIso8601String(),
-        }).eq('id', id);
+        await SupabaseService().client
+            .from('attendance')
+            .update({
+              'approval_status': 'REJECTED',
+              'approved_by': currentUserId,
+              'approved_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', id);
       }
-      
+
       ref.invalidate(pendingApprovalsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,12 +153,15 @@ class _AttendanceApprovalScreenState extends ConsumerState<AttendanceApprovalScr
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
       }
     }
   }
 }
 
-final pendingApprovalsProvider = FutureProvider.family<List<Attendance>, String>((ref, unitId) async {
-  return ref.read(attendanceRepositoryProvider).getPendingApprovals(unitId);
-});
+final pendingApprovalsProvider =
+    FutureProvider.family<List<Attendance>, String>((ref, unitId) async {
+      return ref.read(attendanceRepositoryProvider).getPendingApprovals(unitId);
+    });

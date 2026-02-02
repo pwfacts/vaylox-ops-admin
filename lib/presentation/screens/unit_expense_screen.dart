@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/supabase_service.dart';
 import 'package:intl/intl.dart';
 
-final unitExpensesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final unitExpensesProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final client = SupabaseService().client;
   final now = DateTime.now();
 
@@ -11,7 +13,9 @@ final unitExpensesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) as
   // join with guards to get unit_name (or assigned_unit_id)
   final response = await client
       .from('salary_slips')
-      .select('net_pay, gross_pay, pf_deduction, esic_deduction, guards(assigned_unit_id, units(name))')
+      .select(
+        'net_pay, gross_pay, pf_deduction, esic_deduction, guards(assigned_unit_id, units(name))',
+      )
       .eq('month', now.month)
       .eq('year', now.year);
 
@@ -20,16 +24,19 @@ final unitExpensesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) as
   for (var row in (response as List)) {
     final unitData = row['guards']['units'];
     if (unitData == null) continue;
-    
+
     final unitName = unitData['name'];
-    
-    grouped.putIfAbsent(unitName, () => {
-      'name': unitName,
-      'totalNet': 0.0,
-      'totalGross': 0.0,
-      'totalPf': 0.0,
-      'count': 0,
-    });
+
+    grouped.putIfAbsent(
+      unitName,
+      () => {
+        'name': unitName,
+        'totalNet': 0.0,
+        'totalGross': 0.0,
+        'totalPf': 0.0,
+        'count': 0,
+      },
+    );
 
     grouped[unitName]!['totalNet'] += (row['net_pay'] as num).toDouble();
     grouped[unitName]!['totalGross'] += (row['gross_pay'] as num).toDouble();
@@ -63,7 +70,7 @@ class UnitExpenseScreen extends ConsumerWidget {
               style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 24),
-            ...data.map((unit) => _buildUnitCard(unit)).toList(),
+            ...data.map((unit) => _buildUnitCard(unit)),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -79,7 +86,7 @@ class UnitExpenseScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withAlpha(13)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,31 +94,73 @@ class UnitExpenseScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(unit['name'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                unit['name'],
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                child: Text('${unit['count']} Guards', style: const TextStyle(color: Colors.blueAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withAlpha(26),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${unit['count']} Guards',
+                  style: const TextStyle(
+                    color: Colors.blueAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildRow('Gross Billing (Estimated)', '₹${NumberFormat('#,##,###').format(unit['totalGross'])}', Colors.grey[400]!),
+          _buildRow(
+            'Gross Billing (Estimated)',
+            '₹${NumberFormat('#,##,###').format(unit['totalGross'])}',
+            Colors.grey[400]!,
+          ),
           const SizedBox(height: 8),
-          _buildRow('Statutory Co. (PF/ESIC)', '₹${NumberFormat('#,##,###').format(unit['totalPf'])}', Colors.orangeAccent),
+          _buildRow(
+            'Statutory Co. (PF/ESIC)',
+            '₹${NumberFormat('#,##,###').format(unit['totalPf'])}',
+            Colors.orangeAccent,
+          ),
           const Divider(height: 24, color: Colors.white10),
-          _buildRow('Net Payout', '₹${NumberFormat('#,##,###').format(unit['totalNet'])}', Colors.greenAccent, isBold: true),
+          _buildRow(
+            'Net Payout',
+            '₹${NumberFormat('#,##,###').format(unit['totalNet'])}',
+            Colors.greenAccent,
+            isBold: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRow(String label, String value, Color color, {bool isBold = false}) {
+  Widget _buildRow(
+    String label,
+    String value,
+    Color color, {
+    bool isBold = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 14)),
-        Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.w500)),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 16,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
       ],
     );
   }

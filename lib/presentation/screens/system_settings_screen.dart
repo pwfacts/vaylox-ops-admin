@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../repositories/settings_repository.dart';
+import '../../data/repositories/settings_repository.dart';
 import '../../core/constants/app_constants.dart';
 
 final settingsProvider = FutureProvider<PayrollSettings>((ref) async {
-  return SettingsRepository().getSettings(AppConstants.defaultCompanyId);
+  return SettingsRepository().getSettings(AppConstants.companyId);
 });
 
 class SystemSettingsScreen extends ConsumerStatefulWidget {
   const SystemSettingsScreen({super.key});
 
   @override
-  ConsumerState<SystemSettingsScreen> createState() => _SystemSettingsScreenState();
+  ConsumerState<SystemSettingsScreen> createState() =>
+      _SystemSettingsScreenState();
 }
 
 class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _pfCapController;
   late TextEditingController _esicThresholdController;
   late TextEditingController _ptThresholdController;
@@ -57,7 +58,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
           IconButton(
             icon: const Icon(Icons.save, color: Colors.greenAccent),
             onPressed: _saveSettings,
-          )
+          ),
         ],
       ),
       body: settingsAsync.when(
@@ -69,14 +70,34 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
               padding: const EdgeInsets.all(24),
               children: [
                 _sectionHeader('Statutory Thresholds'),
-                _buildTextField('PF Contribution Cap', _pfCapController, 'Maximum basic pay for PF calculation (e.g. 15000)'),
-                _buildTextField('ESIC Eligibility Limit', _esicThresholdController, 'Gross pay limit for ESIC (e.g. 21000)'),
-                _buildTextField('PT Threshold', _ptThresholdController, 'Minimum gross for Professional Tax (e.g. 12000)'),
-                
+                _buildTextField(
+                  'PF Contribution Cap',
+                  _pfCapController,
+                  'Maximum basic pay for PF calculation (e.g. 15000)',
+                ),
+                _buildTextField(
+                  'ESIC Eligibility Limit',
+                  _esicThresholdController,
+                  'Gross pay limit for ESIC (e.g. 21000)',
+                ),
+                _buildTextField(
+                  'PT Threshold',
+                  _ptThresholdController,
+                  'Minimum gross for Professional Tax (e.g. 12000)',
+                ),
+
                 const SizedBox(height: 32),
                 _sectionHeader('Allowances & Others'),
-                _buildTextField('HRA Percentage (%)', _hraPercentageController, 'House Rent Allowance % of Basic (e.g. 5)'),
-                _buildTextField('LWF Deduction Amount', _lwfAmountController, 'Flat amount for LWF (e.g. 30)'),
+                _buildTextField(
+                  'HRA Percentage (%)',
+                  _hraPercentageController,
+                  'House Rent Allowance % of Basic (e.g. 5)',
+                ),
+                _buildTextField(
+                  'LWF Deduction Amount',
+                  _lwfAmountController,
+                  'Flat amount for LWF (e.g. 30)',
+                ),
 
                 const SizedBox(height: 32),
                 _sectionHeader('LWF Deduction Months'),
@@ -88,7 +109,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                     return FilterChip(
                       label: Text(_getMonthName(month)),
                       selected: isSelected,
-                      selectedColor: Colors.blueAccent.withOpacity(0.3),
+                      selectedColor: Colors.blueAccent.withAlpha(77),
                       checkmarkColor: Colors.blueAccent,
                       onSelected: (selected) {
                         setState(() {
@@ -107,10 +128,18 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     padding: const EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: _saveSettings,
-                  child: const Text('Update System Configuration', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Update System Configuration',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -125,11 +154,22 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
   Widget _sectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(title, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.blueAccent,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hint) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    String hint,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: TextFormField(
@@ -140,19 +180,35 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
           hintText: hint,
           filled: true,
           fillColor: const Color(0xFF1E293B),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
   }
 
   String _getMonthName(int month) {
-    return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1];
+    return [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ][month - 1];
   }
 
   Future<void> _saveSettings() async {
     final updated = PayrollSettings(
-      companyId: AppConstants.defaultCompanyId,
+      companyId: AppConstants.companyId,
       pfCap: double.tryParse(_pfCapController.text) ?? 15000,
       esicThreshold: double.tryParse(_esicThresholdController.text) ?? 21000,
       ptThreshold: double.tryParse(_ptThresholdController.text) ?? 12000,
@@ -165,11 +221,15 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
       await SettingsRepository().updateSettings(updated);
       ref.invalidate(settingsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System settings updated successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('System settings updated successfully')),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Update failed: $e')));
       }
     }
   }

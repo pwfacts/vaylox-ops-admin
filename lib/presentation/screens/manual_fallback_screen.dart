@@ -29,7 +29,7 @@ class ManualFallbackScreen extends StatefulWidget {
     required this.shift,
     this.workedUnitId,
     this.primaryUnitId,
-    this.attendanceType = AttendanceType.NORMAL,
+    this.attendanceType = AttendanceType.normal,
   });
 
   @override
@@ -42,7 +42,7 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
   final _repository = AttendanceRepository();
 
   File? _fallbackPhoto;
-  FallbackReason _reason = FallbackReason.poor_lighting;
+  FallbackReason _reason = FallbackReason.poorLighting;
   final _reasonTextController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -59,7 +59,9 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
   Future<void> _submit() async {
     if (_fallbackPhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Live photo is mandatory for manual fallback.')),
+        const SnackBar(
+          content: Text('Live photo is mandatory for manual fallback.'),
+        ),
       );
       return;
     }
@@ -68,7 +70,8 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
 
     try {
       // 1. Upload photo to ImageKit
-      final photoName = 'fallback_${widget.profile.guardCode}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final photoName =
+          'fallback_${widget.profile.guardCode}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final uploadResult = await _imageKit.uploadImage(
         fileBytes: await _fallbackPhoto!.readAsBytes(),
         fileName: photoName,
@@ -78,7 +81,7 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
       // 2. Create Attendance record
       final attendance = Attendance(
         id: const Uuid().v4(),
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: defaultCompanyId,
         guardId: widget.profile.id,
         attendanceDate: DateTime.now(),
         shift: widget.shift,
@@ -86,12 +89,14 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
         workedUnitId: widget.workedUnitId,
         primaryUnitId: widget.primaryUnitId,
         type: widget.attendanceType,
-        attendanceMethod: AttendanceMethod.MANUAL_FALLBACK,
+        attendanceMethod: AttendanceMethod.manualFallback,
         faceVerified: false,
         fallbackReason: _reason,
-        fallbackReasonText: _reason == FallbackReason.other ? _reasonTextController.text : null,
+        fallbackReasonText: _reason == FallbackReason.other
+            ? _reasonTextController.text
+            : null,
         fallbackPhotoUrl: uploadResult['url'],
-        approvalStatus: ApprovalStatus.PENDING_APPROVAL,
+        approvalStatus: ApprovalStatus.pendingApproval,
         gpsLocation: widget.location,
         gpsAccuracy: widget.accuracy,
         markedByUserId: SupabaseService().currentUser?.id,
@@ -107,7 +112,9 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Submission failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Submission failed: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -125,7 +132,11 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
           children: [
             const Text(
               'Face Verification Failed',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -163,7 +174,10 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Mandatory Photo', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Mandatory Photo',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
         GestureDetector(
           onTap: _isSubmitting ? null : _capturePhoto,
@@ -171,15 +185,22 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
             height: 200,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withAlpha(13),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withAlpha(26)),
               image: _fallbackPhoto != null
-                  ? DecorationImage(image: FileImage(_fallbackPhoto!), fit: BoxFit.cover)
+                  ? DecorationImage(
+                      image: FileImage(_fallbackPhoto!),
+                      fit: BoxFit.cover,
+                    )
                   : null,
             ),
             child: _fallbackPhoto == null
-                ? const Icon(Icons.add_a_photo, size: 40, color: Colors.blueAccent)
+                ? const Icon(
+                    Icons.add_a_photo,
+                    size: 40,
+                    color: Colors.blueAccent,
+                  )
                 : null,
           ),
         ),
@@ -191,14 +212,21 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Reason for Failure', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Reason for Failure',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 12),
         DropdownButtonFormField<FallbackReason>(
-          value: _reason,
-          items: FallbackReason.values.map((r) => DropdownMenuItem(
-            value: r,
-            child: Text(r.name.replaceAll('_', ' ').toUpperCase()),
-          )).toList(),
+          initialValue: _reason,
+          items: FallbackReason.values
+              .map(
+                (r) => DropdownMenuItem(
+                  value: r,
+                  child: Text(r.name.replaceAll('_', ' ').toUpperCase()),
+                ),
+              )
+              .toList(),
           onChanged: (v) => setState(() => _reason = v!),
           decoration: const InputDecoration(
             border: OutlineInputBorder(),

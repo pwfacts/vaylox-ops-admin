@@ -14,12 +14,14 @@ class SyncService {
 
   void start() {
     debugPrint('Sync Service Started');
-    _subscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+    _subscription = Connectivity().onConnectivityChanged.listen((
+      ConnectivityResult result,
+    ) {
       if (result != ConnectivityResult.none) {
         _triggerSync();
       }
     });
-    
+
     // Initial check
     _triggerSync();
   }
@@ -44,20 +46,29 @@ class SyncService {
       for (var record in pendingRecords) {
         try {
           final String localId = record['id'];
-          final Map<String, dynamic> data = jsonDecode(record['attendance_data']);
-          
+          final Map<String, dynamic> data = jsonDecode(
+            record['attendance_data'],
+          );
+
           // Create Attendance object
           final attendance = Attendance.fromJson(data);
-          
+
           // Push to Supabase
-          await _attendanceRepo.markAttendance(attendance: attendance, isOffline: false);
-          
+          await _attendanceRepo.markAttendance(
+            attendance: attendance,
+            isOffline: false,
+          );
+
           // Update local status
           await _localDb.updateSyncStatus(localId, 'SYNCED');
           debugPrint('Synced record $localId');
         } catch (e) {
           debugPrint('Failed to sync record: $e');
-          await _localDb.updateSyncStatus(record['id'], 'FAILED', error: e.toString());
+          await _localDb.updateSyncStatus(
+            record['id'],
+            'FAILED',
+            error: e.toString(),
+          );
         }
       }
     } finally {

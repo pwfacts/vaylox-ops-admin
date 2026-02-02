@@ -4,7 +4,7 @@ class SalarySlip {
   final String guardId;
   final int month;
   final int year;
-  
+
   // Earnings
   final int totalWorkingDays;
   final int presentDays;
@@ -13,7 +13,7 @@ class SalarySlip {
   final double otPay;
   final double otherAllowances;
   final double grossPay;
-  
+
   // Deductions
   final double pfDeduction;
   final double esicDeduction;
@@ -26,22 +26,27 @@ class SalarySlip {
   final double otherDed1;
   final double otherDed2;
   final double totalDeductions;
-  
+
   // Final
   final double netPay;
-  
+
+  // Getters for export/pdf
+  double get earnedBasic => (basicPay / totalWorkingDays) * presentDays;
+  double get hra => 0.0; // Placeholder or calculate if needed
+  double get otherEarnings => otherAllowances;
+
   final String status;
   final DateTime? paymentDate;
   final String? paymentMethod;
   final String? remarks;
-  
+
   // Audit Trail
   final String? manualOverrideBy;
   final DateTime? manualOverrideAt;
   final String? manualOverrideNote;
   final int? attendanceSuggestedDays;
   final int? attendanceSuggestedOtDays;
-  
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -110,11 +115,15 @@ class SalarySlip {
       totalDeductions: (json['total_deductions'] as num).toDouble(),
       netPay: (json['net_pay'] as num).toDouble(),
       status: json['status'] ?? 'DRAFT',
-      paymentDate: json['payment_date'] != null ? DateTime.parse(json['payment_date']) : null,
+      paymentDate: json['payment_date'] != null
+          ? DateTime.parse(json['payment_date'])
+          : null,
       paymentMethod: json['payment_method'],
       remarks: json['remarks'],
       manualOverrideBy: json['manual_override_by'],
-      manualOverrideAt: json['manual_override_at'] != null ? DateTime.parse(json['manual_override_at']) : null,
+      manualOverrideAt: json['manual_override_at'] != null
+          ? DateTime.parse(json['manual_override_at'])
+          : null,
       manualOverrideNote: json['manual_override_note'],
       attendanceSuggestedDays: json['attendance_suggested_days'],
       attendanceSuggestedOtDays: json['attendance_suggested_ot_days'],
@@ -159,5 +168,83 @@ class SalarySlip {
       'attendance_suggested_days': attendanceSuggestedDays,
       'attendance_suggested_ot_days': attendanceSuggestedOtDays,
     };
+  }
+
+  SalarySlip copyWith({
+    String? id,
+    String? companyId,
+    String? guardId,
+    int? month,
+    int? year,
+    int? totalWorkingDays,
+    int? presentDays,
+    int? absentDays,
+    double? basicPay,
+    double? otPay,
+    double? otherAllowances,
+    double? grossPay,
+    double? pfDeduction,
+    double? esicDeduction,
+    double? ptDeduction,
+    double? lwfDeduction,
+    double? advanceDeduction,
+    double? uniformDeduction,
+    double? penaltyDeduction,
+    double? canteenDeduction,
+    double? otherDed1,
+    double? otherDed2,
+    double? totalDeductions,
+    double? netPay,
+    String? status,
+    DateTime? paymentDate,
+    String? paymentMethod,
+    String? remarks,
+    String? manualOverrideBy,
+    DateTime? manualOverrideAt,
+    String? manualOverrideNote,
+    int? attendanceSuggestedDays,
+    int? attendanceSuggestedOtDays,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return SalarySlip(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      guardId: guardId ?? this.guardId,
+      month: month ?? this.month,
+      year: year ?? this.year,
+      totalWorkingDays: totalWorkingDays ?? this.totalWorkingDays,
+      presentDays: presentDays ?? this.presentDays,
+      absentDays: absentDays ?? this.absentDays,
+      basicPay: basicPay ?? this.basicPay,
+      otPay: otPay ?? this.otPay,
+      otherAllowances: otherAllowances ?? this.otherAllowances,
+      grossPay: grossPay ?? this.grossPay,
+      pfDeduction: pfDeduction ?? this.pfDeduction,
+      esicDeduction: esicDeduction ?? this.esicDeduction,
+      ptDeduction: ptDeduction ?? this.ptDeduction,
+      lwfDeduction: lwfDeduction ?? this.lwfDeduction,
+      advanceDeduction: advanceDeduction ?? this.advanceDeduction,
+      uniformDeduction: uniformDeduction ?? this.uniformDeduction,
+      penaltyDeduction: penaltyDeduction ?? this.penaltyDeduction,
+      canteenDeduction: canteenDeduction ?? this.canteenDeduction,
+      otherDed1: otherDed1 ?? this.otherDed1,
+      otherDed2: otherDed2 ?? this.otherDed2,
+      totalDeductions: totalDeductions ?? this.totalDeductions,
+      netPay: netPay ?? this.netPay,
+      status: status ?? this.status,
+      paymentDate: paymentDate ?? this.paymentDate,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      remarks: remarks ?? this.remarks,
+      manualOverrideBy: manualOverrideBy ?? this.manualOverrideBy,
+      manualOverrideAt: manualOverrideAt ?? this.manualOverrideAt,
+      manualOverrideNote: manualOverrideNote ?? this.manualOverrideNote,
+      attendanceSuggestedDays:
+          attendanceSuggestedDays ?? this.attendanceSuggestedDays,
+      attendanceSuggestedOtDays:
+          attendanceSuggestedOtDays ?? this.attendanceSuggestedOtDays,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

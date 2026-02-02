@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,7 +21,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
       performanceMode: FaceDetectorMode.accurate,
     ),
   );
-  
+
   bool _isProcessing = false;
   String? _error;
 
@@ -46,15 +46,19 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
       final List<Face> faces = await faceDetector.processImage(inputImage);
 
       if (faces.isEmpty) {
-        throw Exception('No face detected. Please try again with better lighting.');
+        throw Exception(
+          'No face detected. Please try again with better lighting.',
+        );
       }
 
       if (faces.length > 1) {
-        throw Exception('Multiple faces detected. Please ensure only one person is in the frame.');
+        throw Exception(
+          'Multiple faces detected. Please ensure only one person is in the frame.',
+        );
       }
 
       final face = faces.first;
-      
+
       // Extract face "encoding" - as a simple landmark-based representation for foundation
       // In a production app, we would use a model like FaceNet for real embeddings (TFLite)
       // For Phase 2, we store the landmark coordinates as a JSON string
@@ -65,15 +69,17 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
           'right': face.boundingBox.right,
           'bottom': face.boundingBox.bottom,
         },
-        'landmarks': face.landmarks.map((type, landmark) => MapEntry(
-          type.name,
-          {'x': landmark?.position.x, 'y': landmark?.position.y}
-        )),
+        'landmarks': face.landmarks.map(
+          (type, landmark) => MapEntry(type.name, {
+            'x': landmark?.position.x,
+            'y': landmark?.position.y,
+          }),
+        ),
       };
 
       widget.onFaceRegistered(jsonEncode(encoding), image);
+      if (!mounted) return;
       Navigator.pop(context);
-
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -95,7 +101,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: Main_AxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.face, size: 100, color: Colors.blueAccent),
               const SizedBox(height: 24),
@@ -123,7 +129,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                     onPressed: _captureAndProcess,
                     icon: const Icon(Icons.camera),
                     label: const Text('Capture Face'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
                   ),
                 ),
             ],

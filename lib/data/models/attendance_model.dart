@@ -1,9 +1,18 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-enum AttendanceMethod { FACE, MANUAL_FALLBACK, SUPERVISOR }
-enum FallbackReason { poor_lighting, camera_issue, face_mismatch, device_issue, other }
-enum ApprovalStatus { PENDING_APPROVAL, APPROVED, REJECTED }
-enum AttendanceType { NORMAL, OT }
+enum AttendanceMethod { face, manualFallback, supervisor }
+
+enum FallbackReason {
+  poorLighting,
+  cameraIssue,
+  faceMismatch,
+  deviceIssue,
+  other,
+}
+
+enum ApprovalStatus { pendingApproval, approved, rejected }
+
+enum AttendanceType { normal, ot }
 
 class Attendance {
   final String id;
@@ -15,7 +24,7 @@ class Attendance {
   final String? workedUnitId;
   final String? primaryUnitId;
   final AttendanceType type;
-  final String? unitName; 
+  final String? unitName;
   final bool isTemporaryAssignment;
   final DateTime? checkInTime;
   final DateTime? checkOutTime;
@@ -50,7 +59,7 @@ class Attendance {
     required this.unitId,
     this.workedUnitId,
     this.primaryUnitId,
-    this.type = AttendanceType.NORMAL,
+    this.type = AttendanceType.normal,
     this.unitName,
     this.isTemporaryAssignment = false,
     this.checkInTime,
@@ -61,7 +70,7 @@ class Attendance {
     this.fallbackReason,
     this.fallbackReasonText,
     this.fallbackPhotoUrl,
-    this.approvalStatus = ApprovalStatus.PENDING_APPROVAL,
+    this.approvalStatus = ApprovalStatus.pendingApproval,
     this.approvedBy,
     this.approvedAt,
     this.approvalNotes,
@@ -98,31 +107,53 @@ class Attendance {
       unitId: json['unit_id'],
       workedUnitId: json['worked_unit_id'],
       primaryUnitId: json['primary_unit_id'],
-      type: AttendanceType.values.firstWhere((e) => e.name == (json['type'] ?? 'NORMAL')),
-      unitName: json['units']?['name'], 
+      type: AttendanceType.values.firstWhere(
+        (e) => e.name.toUpperCase() == (json['type'] ?? 'NORMAL'),
+      ),
+      unitName: json['units']?['name'],
       isTemporaryAssignment: json['is_temporary_assignment'] ?? false,
-      checkInTime: json['check_in_time'] != null ? DateTime.parse(json['check_in_time']) : null,
-      checkOutTime: json['check_out_time'] != null ? DateTime.parse(json['check_out_time']) : null,
-      attendanceMethod: AttendanceMethod.values.firstWhere((e) => e.name == json['attendance_method']),
+      checkInTime: json['check_in_time'] != null
+          ? DateTime.parse(json['check_in_time'])
+          : null,
+      checkOutTime: json['check_out_time'] != null
+          ? DateTime.parse(json['check_out_time'])
+          : null,
+      attendanceMethod: AttendanceMethod.values.firstWhere(
+        (e) => e.name.toUpperCase() == json['attendance_method'],
+      ),
       faceVerified: json['face_verified'] ?? false,
-      faceMatchScore: json['face_match_score'] != null ? (json['face_match_score'] as num).toDouble() : null,
-      fallbackReason: json['fallback_reason'] != null 
-          ? FallbackReason.values.firstWhere((e) => e.name == json['fallback_reason']) 
+      faceMatchScore: json['face_match_score'] != null
+          ? (json['face_match_score'] as num).toDouble()
+          : null,
+      fallbackReason: json['fallback_reason'] != null
+          ? FallbackReason.values.firstWhere(
+              (e) => e.name.toUpperCase() == json['fallback_reason'],
+            )
           : null,
       fallbackReasonText: json['fallback_reason_text'],
       fallbackPhotoUrl: json['fallback_photo_url'],
-      approvalStatus: ApprovalStatus.values.firstWhere((e) => e.name == json['approval_status']),
+      approvalStatus: ApprovalStatus.values.firstWhere(
+        (e) => e.name.toUpperCase() == json['approval_status'],
+      ),
       approvedBy: json['approved_by'],
-      approvedAt: json['approved_at'] != null ? DateTime.parse(json['approved_at']) : null,
+      approvedAt: json['approved_at'] != null
+          ? DateTime.parse(json['approved_at'])
+          : null,
       approvalNotes: json['approval_notes'],
       gpsLocation: location,
-      gpsAccuracy: json['gps_accuracy'] != null ? (json['gps_accuracy'] as num).toDouble() : null,
+      gpsAccuracy: json['gps_accuracy'] != null
+          ? (json['gps_accuracy'] as num).toDouble()
+          : null,
       isOt: json['is_ot'] ?? false,
       otHours: (json['ot_hours'] as num? ?? 0).toDouble(),
-      otRateApplied: json['ot_rate_applied'] != null ? (json['ot_rate_applied'] as num).toDouble() : null,
+      otRateApplied: json['ot_rate_applied'] != null
+          ? (json['ot_rate_applied'] as num).toDouble()
+          : null,
       syncedFromOffline: json['synced_from_offline'] ?? false,
       deviceId: json['device_id'],
-      offlineCreatedAt: json['offline_created_at'] != null ? DateTime.parse(json['offline_created_at']) : null,
+      offlineCreatedAt: json['offline_created_at'] != null
+          ? DateTime.parse(json['offline_created_at'])
+          : null,
       markedByUserId: json['marked_by_user_id'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
@@ -139,22 +170,22 @@ class Attendance {
       'unit_id': unitId,
       'worked_unit_id': workedUnitId ?? unitId,
       'primary_unit_id': primaryUnitId,
-      'type': type.name,
+      'type': type.name.toUpperCase(),
       'is_temporary_assignment': isTemporaryAssignment,
       'check_in_time': checkInTime?.toIso8601String(),
       'check_out_time': checkOutTime?.toIso8601String(),
-      'attendance_method': attendanceMethod.name,
+      'attendance_method': attendanceMethod.name.toUpperCase(),
       'face_verified': faceVerified,
       'face_match_score': faceMatchScore,
-      'fallback_reason': fallbackReason?.name,
+      'fallback_reason': fallbackReason?.name.toUpperCase(),
       'fallback_reason_text': fallbackReasonText,
       'fallback_photo_url': fallbackPhotoUrl,
-      'approval_status': approvalStatus.name,
+      'approval_status': approvalStatus.name.toUpperCase(),
       'approved_by': approvedBy,
       'approved_at': approvedAt?.toIso8601String(),
       'approval_notes': approvalNotes,
-      'gps_location': gpsLocation != null 
-          ? 'POINT(${gpsLocation!.longitude} ${gpsLocation!.latitude})' 
+      'gps_location': gpsLocation != null
+          ? 'POINT(${gpsLocation!.longitude} ${gpsLocation!.latitude})'
           : null,
       'gps_accuracy': gpsAccuracy,
       'is_ot': isOt,

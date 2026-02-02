@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/constants/app_constants.dart';
 import 'data/services/supabase_service.dart';
 import 'presentation/screens/guard_list_screen.dart';
 import 'presentation/screens/attendance_screen.dart';
@@ -9,24 +8,18 @@ import 'presentation/screens/supervisor_bulk_screen.dart';
 import 'presentation/screens/attendance_approval_screen.dart';
 import 'presentation/screens/payroll_wizard_screen.dart';
 import 'presentation/screens/admin_dashboard_screen.dart';
-import 'core/theme/app_colors.dart';
-
 import 'data/services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final supabaseService = SupabaseService();
   await supabaseService.initialize();
 
   // Start Offline Sync Service
   SyncService().start();
 
-  runApp(
-    const ProviderScope(
-      child: VayloxOpsApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: VayloxOpsApp()));
 }
 
 class VayloxOpsApp extends StatelessWidget {
@@ -60,7 +53,9 @@ class AuthWrapper extends ConsumerWidget {
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         final session = snapshot.data?.session;
@@ -98,9 +93,15 @@ class _MainShellState extends State<MainShell> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (idx) => setState(() => _selectedIndex = idx),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.qr_code_scanner), label: 'Attendance'),
+          NavigationDestination(
+            icon: Icon(Icons.qr_code_scanner),
+            label: 'Attendance',
+          ),
           NavigationDestination(icon: Icon(Icons.people), label: 'Guards'),
-          NavigationDestination(icon: Icon(Icons.dashboard_customize), label: 'Supervisor'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_customize),
+            label: 'Supervisor',
+          ),
         ],
       ),
     );
@@ -127,8 +128,10 @@ class SupervisorDashboard extends StatelessWidget {
             icon: Icons.analytics,
             color: Colors.blueAccent,
             onTap: () => Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => const AdminDashboardScreen())
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminDashboardScreen(),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -138,11 +141,13 @@ class SupervisorDashboard extends StatelessWidget {
             subtitle: 'Mark attendance for multiple guards',
             icon: Icons.group_add,
             onTap: () => Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => const SupervisorBulkScreen(
-                unitId: demoUnitId,
-                unitName: demoUnitName,
-              ))
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SupervisorBulkScreen(
+                  unitId: demoUnitId,
+                  unitName: demoUnitName,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -153,9 +158,10 @@ class SupervisorDashboard extends StatelessWidget {
             icon: Icons.verified_user,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const AttendanceApprovalScreen(
-                unitId: demoUnitId,
-              ))
+              MaterialPageRoute(
+                builder: (context) =>
+                    const AttendanceApprovalScreen(unitId: demoUnitId),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -166,10 +172,12 @@ class SupervisorDashboard extends StatelessWidget {
             icon: Icons.account_balance_wallet,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const PayrollWizardScreen(
-                unitId: demoUnitId,
-                unitName: demoUnitName,
-              ))
+              MaterialPageRoute(
+                builder: (context) => const PayrollWizardScreen(
+                  unitId: demoUnitId,
+                  unitName: demoUnitName,
+                ),
+              ),
             ),
           ),
         ],
@@ -177,7 +185,8 @@ class SupervisorDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, {
+  Widget _buildActionCard(
+    BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
@@ -186,19 +195,26 @@ class SupervisorDashboard extends StatelessWidget {
   }) {
     return Card(
       elevation: 0,
-       color: const Color(0xFF1E293B),
+      color: const Color(0xFF1E293B),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(20),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withAlpha(26), // ~0.1 opacity
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, size: 28, color: color),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.white,
+          ),
+        ),
         subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[400])),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: onTap,
@@ -207,26 +223,69 @@ class SupervisorDashboard extends StatelessWidget {
   }
 }
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() => _isLoading = true);
+    try {
+      // NOTE: You should change these to your actual default credentials
+      // or implement a proper login form.
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: 'admin@jaydurga.com',
+        password: 'password123',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: Main_AxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
               'JDS MANAGEMENT',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
             ),
             const SizedBox(height: 48),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(20)),
-              child: const Text('Login Default Account'),
-            ),
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 20,
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Login Default Account'),
+                  ),
           ],
         ),
       ),

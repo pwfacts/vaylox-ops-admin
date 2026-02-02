@@ -9,20 +9,31 @@ class SupabaseService {
   late final SupabaseClient client;
 
   Future<void> initialize() async {
-    await Supabase.initialize(
-      url: SUPABASE_URL,
-      anonKey: SUPABASE_ANON_KEY,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
     client = Supabase.instance.client;
   }
 
   // Auth helper methods
-  Future<AuthResponse> signIn({required String email, required String password}) async {
-    return await client.auth.signInWithPassword(email: email, password: password);
+  Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return await client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
   }
 
-  Future<AuthResponse> signUp({required String email, required String password, Map<String, dynamic>? data}) async {
-    return await client.auth.signUp(email: email, password: password, data: data);
+  Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+    Map<String, dynamic>? data,
+  }) async {
+    return await client.auth.signUp(
+      email: email,
+      password: password,
+      data: data,
+    );
   }
 
   Future<void> signOut() async {

@@ -17,8 +17,10 @@ class SalarySlipListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('My Salary Slips')),
       body: profileAsync.when(
         data: (profile) {
-          if (profile == null) return const Center(child: Text('No profile found.'));
-          
+          if (profile == null) {
+            return const Center(child: Text('No profile found.'));
+          }
+
           final slipsAsync = ref.watch(guardSlipsProvider(profile.id));
           return slipsAsync.when(
             data: (slips) => slips.isEmpty
@@ -42,14 +44,19 @@ class SalarySlipListScreen extends ConsumerWidget {
   }
 
   Widget _buildSlipCard(BuildContext context, SalarySlip slip) {
-    final monthName = DateFormat('MMMM').format(DateTime(slip.year, slip.month));
-    
+    final monthName = DateFormat(
+      'MMMM',
+    ).format(DateTime(slip.year, slip.month));
+
     return Card(
-      margin: const EdgeInsets.bottom(16),
+      margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        title: Text('$monthName ${slip.year}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          '$monthName ${slip.year}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -58,13 +65,24 @@ class SalarySlipListScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Net Salary:'),
-                Text('₹${slip.netPay.toStringAsFixed(2)}', 
-                     style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
+                Text(
+                  '₹${slip.netPay.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
-            Text('Status: ${slip.status}', 
-                 style: TextStyle(color: slip.status == 'PAID' ? AppColors.success : AppColors.warning)),
+            Text(
+              'Status: ${slip.status}',
+              style: TextStyle(
+                color: slip.status == 'PAID'
+                    ? AppColors.success
+                    : AppColors.warning,
+              ),
+            ),
           ],
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -96,21 +114,31 @@ class SalarySlipListScreen extends ConsumerWidget {
                 child: Container(
                   width: 50,
                   height: 5,
-                  decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               const Text('Salary Breakdown', style: AppTextStyles.heading2),
               const SizedBox(height: 24),
-              
+
               _item('Basic Pay (Earned)', slip.basicPay),
               _item('Overtime Pay', slip.otPay),
               _item('Allowances', slip.otherAllowances),
               const Divider(height: 32),
               _item('Gross Earnings', slip.grossPay, isBold: true),
-              
+
               const SizedBox(height: 24),
-              const Text('Deductions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.error)),
+              const Text(
+                'Deductions',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppColors.error,
+                ),
+              ),
               const SizedBox(height: 16),
               _item('Provident Fund (PF)', -slip.pfDeduction),
               _item('ESIC', -slip.esicDeduction),
@@ -124,21 +152,35 @@ class SalarySlipListScreen extends ConsumerWidget {
               if (slip.otherDed2 > 0) _item('Other Ded 2', -slip.otherDed2),
               const Divider(height: 32),
               _item('Total Deductions', -slip.totalDeductions, isBold: true),
-              
+
               const SizedBox(height: 32),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  color: AppColors.primaryBlue.withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColors.primaryBlue.withAlpha(77),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('NET TAKE HOME', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('₹${slip.netPay.toStringAsFixed(2)}', 
-                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.success)),
+                    const Text(
+                      'NET TAKE HOME',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₹${slip.netPay.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -156,16 +198,22 @@ class SalarySlipListScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(
-            fontSize: 16, 
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: isBold ? Colors.white : Colors.grey[400],
-          )),
-          Text('₹${value.abs().toStringAsFixed(2)}', style: TextStyle(
-            fontSize: 16, 
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: value < 0 ? AppColors.error : Colors.white,
-          )),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: isBold ? Colors.white : Colors.grey[400],
+            ),
+          ),
+          Text(
+            '₹${value.abs().toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: value < 0 ? AppColors.error : Colors.white,
+            ),
+          ),
         ],
       ),
     );

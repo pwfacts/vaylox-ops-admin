@@ -1,17 +1,3 @@
 {
-    "github": {
-        "silent": true
-    },
-    "buildCommand": "chmod +x build.sh && ./build.sh",
-    "outputDirectory": "build/web",
-    "framework": null,
-    "routes": [
-        {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
-        }
-    ]
+    "outputDirectory": "web"
 }

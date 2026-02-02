@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaylox Ops - Admin Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body class="font-sans text-white">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="max-w-md mx-auto mt-20">
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🛡️</div>
+                    <h1 class="text-3xl font-bold">Vaylox Ops</h1>
+                    <p class="text-gray-400">Admin Portal</p>
+                </div>
+                <form id="loginForm" class="space-y-4">
+                    <input type="email" id="email" placeholder="Email" required
+                        class="w-full px-4 py-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="password" placeholder="Password" required
+                        class="w-full px-4 py-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold transition">
+                        Sign In
+                    </button>
+                </form>
+                <p id="error" class="text-red-400 text-sm mt-4 hidden"></p>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold">Vaylox Ops Dashboard</h1>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">
+                    Logout
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-xl">
+                    <div class="text-4xl mb-2">👥</div>
+                    <h3 class="text-xl font-semibold mb-1">Total Guards</h3>
+                    <p class="text-3xl font-bold" id="totalGuards">Loading...</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-600 to-green-800 p-6 rounded-xl">
+                    <div class="text-4xl mb-2">✅</div>
+                    <h3 class="text-xl font-semibold mb-1">Today's Attendance</h3>
+                    <p class="text-3xl font-bold" id="todayAttendance">Loading...</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 p-6 rounded-xl">
+                    <div class="text-4xl mb-2">🏢</div>
+                    <h3 class="text-xl font-semibold mb-1">Active Units</h3>
+                    <p class="text-3xl font-bold" id="activeUnits">Loading...</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition">
+                        📊 Analytics
+                    </button>
+                    <button class="bg-green-600 hover:bg-green-700 p-4 rounded-lg transition">
+                        💰 Payroll
+                    </button>
+                    <button class="bg-orange-600 hover:bg-orange-700 p-4 rounded-lg transition">
+                        👥 Guards
+                    </button>
+                    <button class="bg-purple-600 hover:bg-purple-700 p-4 rounded-lg transition">
+                        ⚙️ Settings
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gray-800 p-6 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4">Recent Guards</h2>
+                <div id="guardsList" class="space-y-2">
+                    <p class="text-gray-400">Loading guards...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JK1QxQViVl6BESCygq4AWQ_OhDRyM2j';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Check if already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) showDashboard();
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                document.getElementById('error').textContent = error.message;
+                document.getElementById('error').classList.remove('hidden');
+            } else {
+                showDashboard();
+            }
+        });
+
+        async function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            await loadDashboardData();
+        }
+
+        async function loadDashboardData() {
+            // Load guards count
+            const { data: guards, error: guardsError } = await supabase
+                .from('guards')
+                .select('*', { count: 'exact' });
+            document.getElementById('totalGuards').textContent = guards?.length || 0;
+
+            // Load today's attendance
+            const today = new Date().toISOString().split('T')[0];
+            const { data: attendance } = await supabase
+                .from('attendance')
+                .select('*', { count: 'exact' })
+                .eq('attendance_date', today);
+            document.getElementById('todayAttendance').textContent = attendance?.length || 0;
+
+            // Load units count
+            const { data: units } = await supabase
+                .from('units')
+                .select('*', { count: 'exact' });
+            document.getElementById('activeUnits').textContent = units?.length || 0;
+
+            // Load recent guards
+            const { data: recentGuards } = await supabase
+                .from('guards')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const guardsList = document.getElementById('guardsList');
+            if (recentGuards && recentGuards.length > 0) {
+                guardsList.innerHTML = recentGuards.map(guard => `
+                    <div class="flex justify-between items-center bg-gray-700 p-4 rounded-lg">
+                        <div>
+                            <p class="font-semibold">${guard.full_name}</p>
+                            <p class="text-sm text-gray-400">${guard.guard_code}</p>
+                        </div>
+                        <span class="text-sm text-green-400">Active</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function logout() {
+            supabase.auth.signOut();
+            location.reload();
+        }
+    </script>
+</body>
+
+</html>

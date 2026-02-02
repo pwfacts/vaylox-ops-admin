@@ -44,7 +44,7 @@ dependencies:
   google_maps_flutter: ^2.5.0
   connectivity_plus: ^5.0.2
   image_picker: ^1.2.1
-  image_cropper: ^5.0.0
+  image_cropper: ^9.0.0
   animate_do: ^3.1.2
   shimmer: ^3.0.0
   lottie: ^2.7.0
@@ -59,9 +59,11 @@ dependencies:
   open_filex: ^4.5.0
   pdf: ^3.11.1
   printing: ^5.13.2
-  syncfusion_flutter_charts: ^21.1.35
+  syncfusion_flutter_charts: ^28.1.33
   encrypt: ^5.0.3
   http: ^1.2.1
+  dio: ^5.4.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

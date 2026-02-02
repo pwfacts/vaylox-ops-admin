@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
-import '../../data/models/unit_model.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,7 +10,7 @@ import '../../data/models/attendance_model.dart';
 import '../../data/services/supabase_service.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/current_profile_provider.dart';
-import '../services/face_comparison_service.dart';
+import '../../data/services/face_comparison_service.dart';
 import 'face_registration_screen.dart';
 import 'manual_fallback_screen.dart';
 import 'salary_slip_list_screen.dart';
@@ -45,13 +45,21 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             data: (profile) {
               if (profile == null) {
                 return const Center(
-                  child: Text('No guard profile linked to this user.', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    'No guard profile linked to this user.',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 );
               }
               return _buildAttendanceUI(profile);
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.white))),
+            error: (e, s) => Center(
+              child: Text(
+                'Error: $e',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ),
       ),
@@ -77,16 +85,28 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     ),
                     Text(
                       profile.fullName,
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                  backgroundColor: Colors.blueAccent.withAlpha(51),
                   child: IconButton(
-                    icon: const Icon(Icons.receipt_long, color: Colors.blueAccent),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SalarySlipListScreen())),
+                    icon: const Icon(
+                      Icons.receipt_long,
+                      color: Colors.blueAccent,
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SalarySlipListScreen(),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -120,7 +140,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         const SizedBox(height: 8),
         Text(
           DateFormat('hh:mm a').format(DateTime.now()),
-          style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -131,15 +155,19 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withAlpha(13),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withAlpha(26)),
       ),
       child: Column(
         children: [
           const Text(
             'Punch In',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -161,11 +189,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   Future<void> _startAttendanceFlow(dynamic profile) async {
     setState(() => _isVerifying = true);
-    
+
     try {
       // 1. GPS Validation
       final position = await _getCurrentLocation();
-      
+
       // 2. Navigate to Face Capture
       if (!mounted) return;
       Navigator.push(
@@ -180,7 +208,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) {
@@ -191,19 +221,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   Widget _buildUnitSelector(dynamic profile) {
     final unitsAsync = ref.watch(unitsProvider);
-    
+
     // Set initial selection to assigned unit if not already set
-    if (_selectedUnitId == null) {
-      _selectedUnitId = profile.assignedUnitId;
-    }
+    _selectedUnitId ??= profile.assignedUnitId;
 
     return unitsAsync.when(
       data: (units) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withAlpha(13),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withAlpha(26)),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
@@ -211,16 +239,26 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             isExpanded: true,
             dropdownColor: const Color(0xFF1F2937),
             style: const TextStyle(color: Colors.white),
-            items: units.map((u) => DropdownMenuItem(
-              value: u.id,
-              child: Text(u.name, style: const TextStyle(color: Colors.white)),
-            )).toList(),
+            items: units
+                .map(
+                  (u) => DropdownMenuItem(
+                    value: u.id,
+                    child: Text(
+                      u.name,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+                .toList(),
             onChanged: (val) => setState(() => _selectedUnitId = val),
           ),
         ),
       ),
       loading: () => const LinearProgressIndicator(),
-      error: (e, s) => Text('Error loading units: $e', style: const TextStyle(color: Colors.red)),
+      error: (e, s) => Text(
+        'Error loading units: $e',
+        style: const TextStyle(color: Colors.red),
+      ),
     );
   }
 
@@ -231,38 +269,49 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) throw 'Location permissions are denied';
+      if (permission == LocationPermission.denied) {
+        throw 'Location permissions are denied';
+      }
     }
-    
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 
-  void _processAttendance(dynamic profile, String encoding, Position position) async {
+  void _processAttendance(
+    dynamic profile,
+    String encoding,
+    Position position,
+  ) async {
     // 1. Calculate Face Match Score using real comparison
     final faceService = FaceComparisonService();
     double matchScore = 0.0;
-    
+
     if (profile.faceEncoding != null) {
-      matchScore = faceService.calculateMatchScore(encoding, profile.faceEncoding!);
+      matchScore = faceService.calculateMatchScore(
+        encoding,
+        profile.faceEncoding!,
+      );
     }
-    
+
     // Check if the user wants to test fallback (optional logic for testing)
     // if (encoding.contains("failure")) matchScore = 0.5;
 
     if (matchScore >= 0.8) {
       final isOt = _selectedUnitId != profile.assignedUnitId;
-      
+
       final attendance = Attendance(
         id: const Uuid().v4(),
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: defaultCompanyId,
         guardId: profile.id,
         attendanceDate: DateTime.now(),
         shift: _determineShift(),
         unitId: _selectedUnitId!, // worked_unit_id
         workedUnitId: _selectedUnitId,
         primaryUnitId: profile.assignedUnitId,
-        type: isOt ? AttendanceType.OT : AttendanceType.NORMAL,
-        attendanceMethod: AttendanceMethod.FACE,
+        type: isOt ? AttendanceType.ot : AttendanceType.normal,
+        attendanceMethod: AttendanceMethod.face,
         faceVerified: true,
         faceMatchScore: matchScore,
         gpsLocation: LatLng(position.latitude, position.longitude),
@@ -270,11 +319,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         markedByUserId: SupabaseService().currentUser?.id,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        approvalStatus: ApprovalStatus.APPROVED,
+        approvalStatus: ApprovalStatus.approved,
       );
 
       try {
-        await ref.read(attendanceRepositoryProvider).markAttendance(attendance: attendance);
+        await ref
+            .read(attendanceRepositoryProvider)
+            .markAttendance(attendance: attendance);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Success: Attendance marked!')),
@@ -282,7 +333,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed: $e')));
         }
       }
     } else {
@@ -298,7 +351,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             shift: _determineShift(),
             workedUnitId: _selectedUnitId,
             primaryUnitId: profile.assignedUnitId,
-            attendanceType: _selectedUnitId != profile.assignedUnitId ? AttendanceType.OT : AttendanceType.NORMAL,
+            attendanceType: _selectedUnitId != profile.assignedUnitId
+                ? AttendanceType.ot
+                : AttendanceType.normal,
           ),
         ),
       );

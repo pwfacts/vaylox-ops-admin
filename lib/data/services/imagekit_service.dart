@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
 import '../../core/constants/app_constants.dart';
 
 class ImageKitService {
@@ -31,16 +31,20 @@ class ImageKitService {
     required String fileName,
     required String folder,
   }) async {
-    final expire = DateTime.now().add(const Duration(minutes: 30)).millisecondsSinceEpoch ~/ 1000;
+    final expire =
+        DateTime.now()
+            .add(const Duration(minutes: 30))
+            .millisecondsSinceEpoch ~/
+        1000;
     final token = base64Encode(utf8.encode(fileName + expire.toString()));
-    
+
     // Get signature from our Supabase Edge Function
     final signature = await getSignature(token, expire);
 
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(fileBytes, filename: fileName),
       'fileName': fileName,
-      'publicKey': IMAGEKIT_PUBLIC_KEY,
+      'publicKey': imagekitPublicKey,
       'signature': signature,
       'expire': expire,
       'token': token,

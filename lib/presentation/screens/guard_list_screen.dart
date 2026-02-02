@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/guard_model.dart';
-import '../../data/repositories/guard_repository.dart';
 import 'enrollment_screen.dart';
+import '../providers/guard_enrollment_provider.dart';
 
-final guardListProvider = FutureProvider.autoDispose.family<List<Guard>, String?>((ref, query) async {
-  return ref.watch(guardRepositoryProvider).getGuards(query: query);
-});
+final guardListProvider = FutureProvider.autoDispose
+    .family<List<Guard>, String?>((ref, query) async {
+      return ref.watch(guardRepositoryProvider).getGuards(query: query);
+    });
 
 class GuardListScreen extends ConsumerStatefulWidget {
   const GuardListScreen({super.key});
@@ -35,7 +36,9 @@ class _GuardListScreenState extends ConsumerState<GuardListScreen> {
               decoration: InputDecoration(
                 hintText: 'Search guards...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 filled: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
@@ -53,8 +56,12 @@ class _GuardListScreenState extends ConsumerState<GuardListScreen> {
                   final guard = guards[index];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: guard.photoUrl != null ? NetworkImage(guard.photoUrl!) : null,
-                      child: guard.photoUrl == null ? const Icon(Icons.person) : null,
+                      backgroundImage: guard.photoUrl != null
+                          ? NetworkImage(guard.photoUrl!)
+                          : null,
+                      child: guard.photoUrl == null
+                          ? const Icon(Icons.person)
+                          : null,
                     ),
                     title: Text(guard.fullName),
                     subtitle: Text('Code: ${guard.guardCode} | ${guard.phone}'),

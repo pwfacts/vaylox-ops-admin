@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../providers/dashboard_provider.dart';
 import 'audit_log_screen.dart';
 import 'unit_expense_screen.dart';
@@ -38,7 +36,9 @@ class AdminDashboardScreen extends ConsumerWidget {
             tooltip: 'System Configuration',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SystemSettingsScreen()),
+              MaterialPageRoute(
+                builder: (context) => const SystemSettingsScreen(),
+              ),
             ),
           ),
           IconButton(
@@ -46,15 +46,22 @@ class AdminDashboardScreen extends ConsumerWidget {
             tooltip: 'Staff Management',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const UserManagementScreen()),
+              MaterialPageRoute(
+                builder: (context) => const UserManagementScreen(),
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.archive_outlined, color: Colors.orangeAccent),
+            icon: const Icon(
+              Icons.archive_outlined,
+              color: Colors.orangeAccent,
+            ),
             tooltip: 'Data & Archives',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const DataManagementScreen()),
+              MaterialPageRoute(
+                builder: (context) => const DataManagementScreen(),
+              ),
             ),
           ),
           IconButton(
@@ -69,7 +76,7 @@ class AdminDashboardScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              _buildSummaryGrid(stats),
+              _buildSummaryGrid(context, stats),
               const SizedBox(height: 32),
               _buildChartsRow(stats),
               const SizedBox(height: 32),
@@ -84,7 +91,7 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryGrid(DashboardStats stats) {
+  Widget _buildSummaryGrid(BuildContext context, DashboardStats stats) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -125,36 +132,57 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: TextStyle(color: Colors.grey[400], fontSize: 13, fontWeight: FontWeight.w500)),
-              Icon(icon, color: color, size: 20),
-            ],
-          ),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        ],
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withAlpha(26)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withAlpha(13),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Icon(icon, color: color, size: 20),
+              ],
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -170,11 +198,22 @@ class AdminDashboardScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Guard Duty Distribution', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+            'Guard Duty Distribution',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: SfCircularChart(
-              legend: Legend(isVisible: true, textStyle: const TextStyle(color: Colors.white)),
+              legend: Legend(
+                isVisible: true,
+                textStyle: const TextStyle(color: Colors.white),
+              ),
+              palette: const [Colors.blueAccent, Colors.orangeAccent],
               series: <CircularSeries>[
                 DoughnutSeries<MapEntry<String, int>, String>(
                   dataSource: stats.attendanceTypeDistribution.entries.toList(),
@@ -183,8 +222,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   dataLabelSettings: const DataLabelSettings(isVisible: true),
                   innerRadius: '60%',
                   explode: true,
-                  palette: const [Colors.blueAccent, Colors.orangeAccent],
-                )
+                ),
               ],
             ),
           ),
@@ -201,13 +239,33 @@ class AdminDashboardScreen extends ConsumerWidget {
           children: [
             const Icon(Icons.security, color: Colors.redAccent, size: 20),
             const SizedBox(width: 8),
-            const Text('Anti-Fraud Alerts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Anti-Fraud Alerts',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
             const Spacer(),
             if (stats.fallbackAlerts.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                child: Text('${stats.fallbackAlerts.length} High Risk', style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withAlpha(51),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${stats.fallbackAlerts.length} High Risk',
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
           ],
         ),
@@ -221,13 +279,16 @@ class AdminDashboardScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.check_circle, color: Colors.greenAccent),
                   SizedBox(width: 12),
-                  Text('No suspicious activity detected this month.', style: TextStyle(color: Colors.grey)),
+                  Text(
+                    'No suspicious activity detected this month.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
           )
         else
-          ...stats.fallbackAlerts.map((alert) => _buildAlertCard(alert)).toList(),
+          ...stats.fallbackAlerts.map((alert) => _buildAlertCard(alert)),
       ],
     );
   }
@@ -239,12 +300,12 @@ class AdminDashboardScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
+        border: Border.all(color: Colors.redAccent.withAlpha(51)),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.redAccent.withOpacity(0.1),
+            backgroundColor: Colors.redAccent.withAlpha(26),
             child: const Icon(Icons.warning, color: Colors.redAccent),
           ),
           const SizedBox(width: 16),
@@ -252,9 +313,17 @@ class AdminDashboardScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(alert.guardName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Text('${alert.fallbackPercentage.toStringAsFixed(0)}% manual fallback in ${alert.totalDuties} duties', 
-                     style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                Text(
+                  alert.guardName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${alert.fallbackPercentage.toStringAsFixed(0)}% manual fallback in ${alert.totalDuties} duties',
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
               ],
             ),
           ),

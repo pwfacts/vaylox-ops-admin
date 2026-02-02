@@ -57,19 +57,21 @@ class SalaryCalculationService {
     // Rule: IF worked_unit_id == primary_unit_id → NORMAL ELSE → OT
     int normalDutiesCount = 0;
     int otDutiesCount = 0;
-    
+
     for (var record in attendanceRecords) {
-      if (record.type == AttendanceType.OT || (record.workedUnitId != null && record.workedUnitId != record.primaryUnitId)) {
+      if (record.type == AttendanceType.ot ||
+          (record.workedUnitId != null &&
+              record.workedUnitId != record.primaryUnitId)) {
         otDutiesCount++;
       } else {
         normalDutiesCount++;
       }
     }
 
-    final presentDaysCountSug = normalDutiesCount; 
+    final presentDaysCountSug = normalDutiesCount;
     final otDaysCountSug = otDutiesCount;
     final baseDaysForSalary = manualCalculationDays ?? totalDaysInMonth;
-    
+
     final finalPresentDays = manualPresentDays ?? presentDaysCountSug;
     final finalOtDays = manualOtDays ?? otDaysCountSug;
     final absentDaysCount = max(0, baseDaysForSalary - finalPresentDays);
@@ -77,7 +79,8 @@ class SalaryCalculationService {
     // 3. Get Payroll Settings
     final settings = await getPayrollSettings(guard.companyId);
     final double pfRate = (settings['pf_percentage'] as num).toDouble() / 100;
-    final double esicRate = (settings['esic_percentage'] as num).toDouble() / 100;
+    final double esicRate =
+        (settings['esic_percentage'] as num).toDouble() / 100;
     final double ptAmount = (settings['professional_tax'] as num).toDouble();
     final double lwfAmount = (settings['lwf_amount'] as num).toDouble();
 
@@ -85,13 +88,13 @@ class SalaryCalculationService {
     final double fixedBasic = manualBasic ?? guard.basicSalary;
     final double perDaySalary = fixedBasic / baseDaysForSalary;
     final double earnedBasic = perDaySalary * finalPresentDays;
-    
+
     final double otBasic = manualOtBasic ?? guard.basicSalary;
     final double otPerDay = otBasic / baseDaysForSalary;
     final double suggestedOtAmount = otPerDay * finalOtDays;
     final double earnedOt = manualOtAmount ?? suggestedOtAmount;
-    
-    const double otherAllowances = 0; 
+
+    const double otherAllowances = 0;
     final double grossPay = earnedBasic + earnedOt + otherAllowances;
 
     // 5. Calculate Deductions with refined logic
@@ -115,9 +118,17 @@ class SalaryCalculationService {
     final bool isLwfMonth = lwfMonths?.contains(month) ?? false;
     final double lwfActual = isLwfMonth ? lwfAmount : 0;
 
-    final double totalDeductions = pfDeduction + esicDeduction + ptDeduction + lwfActual + 
-                                  uniformDeduction + penaltyDeduction + canteenDeduction +
-                                  advanceDeduction + otherDed1 + otherDed2;
+    final double totalDeductions =
+        pfDeduction +
+        esicDeduction +
+        ptDeduction +
+        lwfActual +
+        uniformDeduction +
+        penaltyDeduction +
+        canteenDeduction +
+        advanceDeduction +
+        otherDed1 +
+        otherDed2;
 
     // 6. Net Pay
     final double netPay = grossPay - totalDeductions;
@@ -148,7 +159,12 @@ class SalaryCalculationService {
       totalDeductions: totalDeductions,
       netPay: netPay,
       manualOverrideBy: overrideBy,
-      manualOverrideAt: (manualPresentDays != null || manualOtDays != null || manualBasic != null) ? DateTime.now() : null,
+      manualOverrideAt:
+          (manualPresentDays != null ||
+              manualOtDays != null ||
+              manualBasic != null)
+          ? DateTime.now()
+          : null,
       manualOverrideNote: overrideNote,
       attendanceSuggestedDays: presentDaysCountSug,
       attendanceSuggestedOtDays: otDaysCountSug,
@@ -160,6 +176,8 @@ class SalaryCalculationService {
   Future<void> saveSalarySlip(SalarySlip slip) async {
     final data = slip.toJson();
     data.remove('id'); // Let Supabase generate it
-    await _client.from('salary_slips').upsert(data, onConflict: 'guard_id,month,year');
+    await _client
+        .from('salary_slips')
+        .upsert(data, onConflict: 'guard_id,month,year');
   }
 }

@@ -1,5 +1,3 @@
-import 'package:uuid/uuid.dart';
-
 enum DutyShift { day, night, both }
 
 class Guard {
@@ -13,33 +11,33 @@ class Guard {
   final String aadharNumber;
   final String? panNumber;
   final DateTime dateOfBirth;
-  
+
   // Documents
   final String? aadharFrontUrl;
   final String? aadharBackUrl;
   final String? panCardUrl;
   final String? photoUrl;
   final String? policeVerificationUrl;
-  
+
   // Employment
   final String assignedUnitId;
   final String assignedUnitCode;
   final DutyShift dutyShift;
   final String designation;
-  
+
   // Salary
   final double basicSalary;
   final double? otRatePerHour;
   final String otCalculationMethod;
-  
+
   // Bank
   final String? bankName;
   final String? accountNumber;
   final String? ifscCode;
-  
+
   // Face
   final String? faceEncoding;
-  
+
   final String status;
   final bool isPfEnabled;
   final bool isPtEnabled;
@@ -100,11 +98,15 @@ class Guard {
       photoUrl: json['photo_url'],
       policeVerificationUrl: json['police_verification_url'],
       assignedUnitId: json['assigned_unit_id'],
-      assigned_unit_code: json['assigned_unit_code'],
-      dutyShift: DutyShift.values.firstWhere((e) => e.name == json['duty_shift']),
+      assignedUnitCode: json['assigned_unit_code'],
+      dutyShift: DutyShift.values.firstWhere(
+        (e) => e.name == json['duty_shift'],
+      ),
       designation: json['designation'],
       basicSalary: (json['basic_salary'] as num).toDouble(),
-      otRatePerHour: json['ot_rate_per_hour'] != null ? (json['ot_rate_per_hour'] as num).toDouble() : null,
+      otRatePerHour: json['ot_rate_per_hour'] != null
+          ? (json['ot_rate_per_hour'] as num).toDouble()
+          : null,
       otCalculationMethod: json['ot_calculation_method'],
       bankName: json['bank_name'],
       accountNumber: json['account_number'],
@@ -152,5 +154,76 @@ class Guard {
       'is_pt_enabled': isPtEnabled,
       'is_esic_enabled': isEsicEnabled,
     };
+  }
+
+  Guard copyWith({
+    String? id,
+    String? companyId,
+    String? userId,
+    String? guardCode,
+    String? fullName,
+    String? phone,
+    String? emergencyContact,
+    String? aadharNumber,
+    String? panNumber,
+    DateTime? dateOfBirth,
+    String? aadharFrontUrl,
+    String? aadharBackUrl,
+    String? panCardUrl,
+    String? photoUrl,
+    String? policeVerificationUrl,
+    String? assignedUnitId,
+    String? assignedUnitCode,
+    DutyShift? dutyShift,
+    String? designation,
+    double? basicSalary,
+    double? otRatePerHour,
+    String? otCalculationMethod,
+    String? bankName,
+    String? accountNumber,
+    String? ifscCode,
+    String? faceEncoding,
+    String? status,
+    bool? isPfEnabled,
+    bool? isPtEnabled,
+    bool? isEsicEnabled,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Guard(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      userId: userId ?? this.userId,
+      guardCode: guardCode ?? this.guardCode,
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      emergencyContact: emergencyContact ?? this.emergencyContact,
+      aadharNumber: aadharNumber ?? this.aadharNumber,
+      panNumber: panNumber ?? this.panNumber,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      aadharFrontUrl: aadharFrontUrl ?? this.aadharFrontUrl,
+      aadharBackUrl: aadharBackUrl ?? this.aadharBackUrl,
+      panCardUrl: panCardUrl ?? this.panCardUrl,
+      photoUrl: photoUrl ?? this.photoUrl,
+      policeVerificationUrl:
+          policeVerificationUrl ?? this.policeVerificationUrl,
+      assignedUnitId: assignedUnitId ?? this.assignedUnitId,
+      assignedUnitCode: assignedUnitCode ?? this.assignedUnitCode,
+      dutyShift: dutyShift ?? this.dutyShift,
+      designation: designation ?? this.designation,
+      basicSalary: basicSalary ?? this.basicSalary,
+      otRatePerHour: otRatePerHour ?? this.otRatePerHour,
+      otCalculationMethod: otCalculationMethod ?? this.otCalculationMethod,
+      bankName: bankName ?? this.bankName,
+      accountNumber: accountNumber ?? this.accountNumber,
+      ifscCode: ifscCode ?? this.ifscCode,
+      faceEncoding: faceEncoding ?? this.faceEncoding,
+      status: status ?? this.status,
+      isPfEnabled: isPfEnabled ?? this.isPfEnabled,
+      isPtEnabled: isPtEnabled ?? this.isPtEnabled,
+      isEsicEnabled: isEsicEnabled ?? this.isEsicEnabled,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

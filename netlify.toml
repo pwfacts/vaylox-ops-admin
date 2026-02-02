@@ -1,0 +1,12 @@
+[build]
+  command = "chmod +x build.sh && ./build.sh"
+  publish = "build/web"
+
+[build.environment]
+  FLUTTER_VERSION = "3.10.4"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true

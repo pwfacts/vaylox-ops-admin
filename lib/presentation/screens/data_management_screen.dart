@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/backup_service.dart';
 import 'package:intl/intl.dart';
 
@@ -13,7 +12,7 @@ class DataManagementScreen extends StatefulWidget {
 class _DataManagementScreenState extends State<DataManagementScreen> {
   final BackupService _backupService = BackupService();
   bool _isArchiving = false;
-  List<Map<String, dynamic>> _localBackups = [];
+  final List<Map<String, dynamic>> _localBackups = [];
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +40,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF1E293B), Color(0xFF0F172A)]),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+        border: Border.all(color: Colors.blueAccent.withAlpha(51)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +53,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             children: [
               Icon(Icons.shield, color: Colors.blueAccent),
               SizedBox(width: 8),
-              Text('Secured Archives', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+              Text(
+                'Secured Archives',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -69,7 +77,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Actions', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
         const SizedBox(height: 16),
         _buildArchiveTile(
           title: 'Full Database Backup',
@@ -90,7 +105,13 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     );
   }
 
-  Widget _buildArchiveTile({required String title, required String subtitle, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildArchiveTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
@@ -100,13 +121,29 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+            color: color.withAlpha(26),
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Icon(icon, color: color),
         ),
-        title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-        trailing: _isArchiving && title.contains('Database') 
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+        ),
+        trailing: _isArchiving && title.contains('Database')
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: _isArchiving ? null : onTap,
       ),
@@ -117,17 +154,27 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Backup History', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text(
+          'Backup History',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
         const SizedBox(height: 16),
         if (_localBackups.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Center(
-              child: Text('No archives generated yet.', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'No archives generated yet.',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
           )
         else
-          ..._localBackups.map((b) => _buildHistoryCard(b)).toList(),
+          ..._localBackups.map((b) => _buildHistoryCard(b)),
       ],
     );
   }
@@ -136,7 +183,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           const Icon(Icons.description_outlined, color: Colors.blueAccent),
@@ -145,15 +195,29 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(backup['fileName'], style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
                 Text(
-                  '${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())} • AES-256 Encrypted', 
+                  backup['fileName'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  '${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())} • AES-256 Encrypted',
                   style: TextStyle(color: Colors.grey[500], fontSize: 11),
                 ),
               ],
             ),
           ),
-          const Text('SECURED', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+          const Text(
+            'SECURED',
+            style: TextStyle(
+              color: Colors.greenAccent,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -161,9 +225,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   Future<void> _runBackup() async {
     setState(() => _isArchiving = true);
-    
+
     final result = await _backupService.createSecureArchive();
-    
+
     setState(() {
       _isArchiving = false;
       if (result['status'] == 'success') {
@@ -175,7 +239,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
-          backgroundColor: result['status'] == 'success' ? Colors.green : Colors.red,
+          backgroundColor: result['status'] == 'success'
+              ? Colors.green
+              : Colors.red,
         ),
       );
     }

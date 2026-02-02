@@ -1,6 +1,6 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/supabase_service.dart';
-import '../../core/constants/app_constants.dart';
 
 class DashboardStats {
   final int totalGuards;
@@ -39,21 +39,31 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final todayStr = now.toIso8601String().split('T')[0];
 
   // 1. Total Guards & Units
-  final guardsRes = await client.from('guards').select('id', const FetchOptions(count: CountOption.exact)).eq('status', 'active');
-  final unitsRes = await client.from('units').select('id', const FetchOptions(count: CountOption.exact));
+  final guardsRes = await client
+      .from('guards')
+      .select('id')
+      .eq('status', 'active')
+      .count(CountOption.exact);
+  final unitsRes = await client
+      .from('units')
+      .select('id')
+      .count(CountOption.exact);
 
-  final totalGuards = guardsRes.count ?? 0;
-  final totalUnits = unitsRes.count ?? 0;
+  final totalGuards = guardsRes.count;
+  final totalUnits = unitsRes.count;
 
   // 2. Today's Attendance
   final attendanceTodayRes = await client
       .from('attendance')
-      .select('id', const FetchOptions(count: CountOption.exact))
+      .select('id')
       .eq('attendance_date', todayStr)
-      .eq('approval_status', 'APPROVED');
-  
-  final presentToday = attendanceTodayRes.count ?? 0;
-  final attendancePct = totalGuards > 0 ? (presentToday / totalGuards) * 100 : 0.0;
+      .eq('approval_status', 'APPROVED')
+      .count(CountOption.exact);
+
+  final presentToday = attendanceTodayRes.count;
+  final attendancePct = totalGuards > 0
+      ? (presentToday / totalGuards) * 100
+      : 0.0;
 
   // 3. Monthly Expense (Net Pay generated)
   final slipsRes = await client
@@ -61,7 +71,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       .select('net_pay')
       .eq('month', now.month)
       .eq('year', now.year);
-  
+
   double totalExpense = 0;
   for (var row in (slipsRes as List)) {
     totalExpense += (row['net_pay'] as num).toDouble();
@@ -73,7 +83,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       .select('type')
       .gte('attendance_date', startOfMonth.toIso8601String().split('T')[0])
       .eq('approval_status', 'APPROVED');
-  
+
   int normalCount = 0;
   int otCount = 0;
   for (var row in (distRes as List)) {
@@ -85,7 +95,6 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   }
 
   // 5. Anti-Fraud (Manual Fallback Alerts)
-  // Logic: Fetch all attendance for month, group by guard, find % of method = 'MANUAL_FALLBACK'
   final fallbackRes = await client
       .from('attendance')
       .select('guard_id, attendance_method, guards(full_name)')
@@ -109,9 +118,13 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
         final total = e.value['total'] as int;
         final manual = e.value['manual'] as int;
         final pct = (manual / total) * 100;
-        return ManualFallbackAlert(guardName: e.value['name'], fallbackPercentage: pct, totalDuties: total);
+        return ManualFallbackAlert(
+          guardName: e.value['name'],
+          fallbackPercentage: pct,
+          totalDuties: total,
+        );
       })
-      .where((a) => a.fallbackPercentage > 30 && a.totalDuties >= 5) // Threshold > 30% and min 5 duties
+      .where((a) => a.fallbackPercentage > 30 && a.totalDuties >= 5)
       .toList();
 
   return DashboardStats(
