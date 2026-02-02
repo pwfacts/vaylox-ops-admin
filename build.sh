@@ -33,7 +33,10 @@ flutter doctor -v
 echo "📦 Pre-downloading Web artifacts..."
 flutter precache --web
 
-# 5. Dependencies
+# 5. Clean & Dependencies
+echo "🧹 Cleaning previous builds..."
+flutter clean
+
 echo "📚 Resolving Dependencies..."
 flutter pub get
 
