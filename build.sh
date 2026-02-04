@@ -36,8 +36,8 @@ flutter pub get
 
 # --- BUILD ---
 echo "🚀 Compiling Web Assembly & JS..."
-# We use canvaskit for the admin portal to ensure pixel-perfect chart rendering (Syncfusion)
-flutter build web --release --web-renderer canvaskit --base-href / --target lib/main_web.dart
+# Building web app with modern Flutter (--web-renderer option removed in newer versions)
+flutter build web --release --base-href / --target lib/main_web.dart
 
 # --- POST-BUILD ---
 echo "✅ Build Completed Successfully."
