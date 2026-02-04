@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,8 +58,13 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
 
   Future<void> _initializeApp() async {
     try {
-      final supabaseService = SupabaseService();
-      await supabaseService.initialize();
+      // Add timeout to prevent infinite hanging
+      await Future.any([
+        _doInitialization(),
+        Future.delayed(const Duration(seconds: 10), () {
+          throw TimeoutException('Initialization timed out after 10 seconds');
+        })
+      ]);
       
       if (mounted) {
         setState(() {
@@ -71,6 +77,28 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
           _hasError = true;
           _errorMessage = e.toString();
         });
+      }
+    }
+  }
+
+  Future<void> _doInitialization() async {
+    try {
+      final supabaseService = SupabaseService();
+      await supabaseService.initialize();
+    } catch (e) {
+      // If Supabase fails, try to initialize manually
+      print('Primary initialization failed: $e');
+      try {
+        await Supabase.initialize(
+          url: 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
+          anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NTY4MDYsImV4cCI6MjA0ODQzMjgwNn0.JdM6zVeuwTNxLGPMEhPJqNzrPSJDnMqTT_mI1FSTgYg',
+          authOptions: const FlutterAuthClientOptions(
+            authFlowType: AuthFlowType.implicit,
+          ),
+        );
+      } catch (fallbackError) {
+        print('Fallback initialization also failed: $fallbackError');
+        rethrow;
       }
     }
   }
@@ -109,6 +137,17 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
                   _initializeApp();
                 },
                 child: const Text('Retry'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // Skip initialization and go directly to login
+                  setState(() {
+                    _isInitialized = true;
+                    _hasError = false;
+                  });
+                },
+                child: const Text('Skip & Continue'),
               ),
             ],
           ),

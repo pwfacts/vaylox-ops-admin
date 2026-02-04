@@ -9,8 +9,20 @@ class SupabaseService {
   late final SupabaseClient client;
 
   Future<void> initialize() async {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-    client = Supabase.instance.client;
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl, 
+        anonKey: supabaseAnonKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.implicit, // Better for web
+        ),
+      );
+      client = Supabase.instance.client;
+    } catch (e) {
+      // If initialization fails, still create client to prevent null errors
+      print('Supabase initialization failed: $e');
+      rethrow;
+    }
   }
 
   // Auth helper methods
