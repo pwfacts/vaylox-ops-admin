@@ -36,8 +36,12 @@ flutter pub get
 
 # --- BUILD ---
 echo "🚀 Compiling Web Assembly & JS..."
-# Building web app with modern Flutter (--web-renderer option removed in newer versions)
-flutter build web --release --base-href / --target lib/main_web.dart
+# Building web app with environment variables
+flutter build web --release \
+  --base-href / \
+  --target lib/main_web.dart \
+  --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+  --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
 # --- POST-BUILD ---
 echo "✅ Build Completed Successfully."
