@@ -232,6 +232,50 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isSignup = false;
+
+  Future<void> _signup() async {
+    setState(() => _isLoading = true);
+    try {
+      print('Attempting signup with email: ${_emailController.text.trim()}');
+      final response = await Supabase.instance.client.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      print('Signup response: ${response.session != null ? 'Success' : 'Check email'}');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.session != null 
+                ? 'Account created successfully!'
+                : 'Check your email for verification link'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Signup error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Signup failed: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _bypassLogin() {
+    // Temporary bypass for testing
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const WebAdminHome()),
+    );
+  }
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
@@ -330,7 +374,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
+                        onPressed: _isLoading ? null : (_isSignup ? _signup : _login),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           backgroundColor: Colors.blueAccent,
@@ -343,10 +387,41 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(fontSize: 16),
+                            : Text(
+                                _isSignup ? 'Create Account' : 'Sign In',
+                                style: const TextStyle(fontSize: 16),
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isSignup = !_isSignup;
+                            });
+                          },
+                          child: Text(
+                            _isSignup 
+                                ? 'Already have account? Sign In' 
+                                : 'Need an account? Sign Up',
+                            style: const TextStyle(color: Colors.blueAccent),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _bypassLogin,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.orange.withOpacity(0.2),
+                        padding: const EdgeInsets.all(12),
+                      ),
+                      child: const Text(
+                        '🚀 Skip Login (Demo Mode)',
+                        style: TextStyle(color: Colors.orange),
                       ),
                     ),
                     const SizedBox(height: 16),
