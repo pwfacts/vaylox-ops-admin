@@ -58,11 +58,11 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
 
   Future<void> _initializeApp() async {
     try {
-      // Add timeout to prevent infinite hanging
+      // Add timeout to prevent infinite hanging  
       await Future.any([
         _doInitialization(),
-        Future.delayed(const Duration(seconds: 10), () {
-          throw TimeoutException('Initialization timed out after 10 seconds');
+        Future.delayed(const Duration(seconds: 20), () {
+          throw TimeoutException('Initialization timed out after 20 seconds');
         })
       ]);
       
@@ -82,16 +82,16 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
   }
 
   Future<void> _doInitialization() async {
-    // Debug log environment variables
+    // Use 'const' for dart-define to work properly at build time
     const envUrl = String.fromEnvironment('VITE_SUPABASE_URL');
     const envKey = String.fromEnvironment('VITE_SUPABASE_ANON_KEY');
     
     print('Environment URL: $envUrl');
     print('Environment Key: ${envKey.isNotEmpty ? 'PRESENT' : 'MISSING'}');
     
-    // For now, skip Supabase initialization to test if app loads
     try {
       if (envUrl.isNotEmpty && envKey.isNotEmpty) {
+        print('Using environment variables for Supabase initialization');
         await Supabase.initialize(
           url: envUrl,
           anonKey: envKey,
@@ -99,9 +99,9 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
             authFlowType: AuthFlowType.implicit,
           ),
         );
-        print('Supabase initialized successfully');
+        print('Supabase initialized successfully with environment variables');
       } else {
-        print('Skipping Supabase - using fallback credentials');
+        print('Environment variables not found, using fallback credentials');
         await Supabase.initialize(
           url: 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
           anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw',
@@ -109,10 +109,11 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
             authFlowType: AuthFlowType.implicit,
           ),
         );
+        print('Supabase initialized with fallback credentials');
       }
     } catch (e) {
-      print('Supabase initialization failed, continuing without it: $e');
-      // Continue without Supabase for now
+      print('Supabase initialization error: $e');
+      // Continue without Supabase for now - app can still load
     }
   }
 

@@ -36,8 +36,13 @@ flutter pub get
 
 # --- BUILD ---
 echo "🚀 Compiling Web Assembly & JS..."
-# Building web app with environment variables
+echo "📊 Environment Variables Status:"
+echo "   VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:0:30}..."
+echo "   VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:0:20}..."
+
+# Building web admin dashboard with environment variables
 flutter build web --release \
+  --target lib/main_web.dart \
   --dart-define=VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
   --dart-define=VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY"
 
