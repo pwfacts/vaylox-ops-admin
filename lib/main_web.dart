@@ -91,7 +91,7 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
       try {
         await Supabase.initialize(
           url: 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
-          anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NTY4MDYsImV4cCI6MjA0ODQzMjgwNn0.JdM6zVeuwTNxLGPMEhPJqNzrPSJDnMqTT_mI1FSTgYg',
+          anonKey: 'YOUR_FALLBACK_KEY_HERE',
           authOptions: const FlutterAuthClientOptions(
             authFlowType: AuthFlowType.implicit,
           ),

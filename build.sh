@@ -40,8 +40,8 @@ echo "🚀 Compiling Web Assembly & JS..."
 flutter build web --release \
   --base-href / \
   --target lib/main_web.dart \
-  --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-  --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+  --dart-define=VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+  --dart-define=VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY"
 
 # --- POST-BUILD ---
 echo "✅ Build Completed Successfully."
