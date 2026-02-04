@@ -82,23 +82,30 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
   }
 
   Future<void> _doInitialization() async {
+    // Debug log environment variables
+    const envUrl = String.fromEnvironment('VITE_SUPABASE_URL');
+    const envKey = String.fromEnvironment('VITE_SUPABASE_ANON_KEY');
+    
+    print('Environment URL: $envUrl');
+    print('Environment Key: ${envKey.isNotEmpty ? 'PRESENT' : 'MISSING'}');
+    
     try {
       final supabaseService = SupabaseService();
       await supabaseService.initialize();
     } catch (e) {
-      // If Supabase fails, try to initialize manually
+      // If Supabase fails, try to initialize manually with fallback
       print('Primary initialization failed: $e');
       try {
         await Supabase.initialize(
-          url: 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
-          anonKey: 'YOUR_FALLBACK_KEY_HERE',
+          url: envUrl.isNotEmpty ? envUrl : 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
+          anonKey: envKey.isNotEmpty ? envKey : 'PLACEHOLDER_KEY',
           authOptions: const FlutterAuthClientOptions(
             authFlowType: AuthFlowType.implicit,
           ),
         );
       } catch (fallbackError) {
         print('Fallback initialization also failed: $fallbackError');
-        rethrow;
+        // Don't rethrow - let app continue without Supabase for now
       }
     }
   }
