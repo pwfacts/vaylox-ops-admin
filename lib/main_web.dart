@@ -89,24 +89,30 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
     print('Environment URL: $envUrl');
     print('Environment Key: ${envKey.isNotEmpty ? 'PRESENT' : 'MISSING'}');
     
+    // For now, skip Supabase initialization to test if app loads
     try {
-      final supabaseService = SupabaseService();
-      await supabaseService.initialize();
-    } catch (e) {
-      // If Supabase fails, try to initialize manually with fallback
-      print('Primary initialization failed: $e');
-      try {
+      if (envUrl.isNotEmpty && envKey.isNotEmpty) {
         await Supabase.initialize(
-          url: envUrl.isNotEmpty ? envUrl : 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
-          anonKey: envKey.isNotEmpty ? envKey : 'PLACEHOLDER_KEY',
+          url: envUrl,
+          anonKey: envKey,
           authOptions: const FlutterAuthClientOptions(
             authFlowType: AuthFlowType.implicit,
           ),
         );
-      } catch (fallbackError) {
-        print('Fallback initialization also failed: $fallbackError');
-        // Don't rethrow - let app continue without Supabase for now
+        print('Supabase initialized successfully');
+      } else {
+        print('Skipping Supabase - using fallback credentials');
+        await Supabase.initialize(
+          url: 'https://fcpbexqyyzdvbiwplmjt.supabase.co',
+          anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw',
+          authOptions: const FlutterAuthClientOptions(
+            authFlowType: AuthFlowType.implicit,
+          ),
+        );
       }
+    } catch (e) {
+      print('Supabase initialization failed, continuing without it: $e');
+      // Continue without Supabase for now
     }
   }
 
@@ -230,15 +236,31 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   Future<void> _login() async {
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      print('Attempting login with email: ${_emailController.text.trim()}');
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      print('Login response: ${response.session != null ? 'Success' : 'Failed'}');
     } catch (e) {
+      print('Login error details: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+        String errorMessage = 'Login failed';
+        if (e.toString().contains('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password';
+        } else if (e.toString().contains('Email not confirmed')) {
+          errorMessage = 'Please confirm your email first';
+        } else if (e.toString().contains('400')) {
+          errorMessage = 'Invalid request. Check email format.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$errorMessage\nDetails: $e'),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -325,6 +347,42 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                 'Sign In',
                                 style: TextStyle(fontSize: 16),
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Test Credentials:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Email: admin@vaylox.com',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              color: Colors.white70,
+                            ),
+                          ),
+                          Text(
+                            'Password: admin123',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
