@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,11 +14,32 @@ import 'data/services/sync_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final supabaseService = SupabaseService();
-  await supabaseService.initialize();
+  // Initialize Supabase with error handling for web
+  if (kIsWeb) {
+    // For web, use environment variables and handle failures gracefully
+    try {
+      const url = String.fromEnvironment('VITE_SUPABASE_URL');
+      const key = String.fromEnvironment('VITE_SUPABASE_ANON_KEY');
+      
+      if (url.isNotEmpty && key.isNotEmpty) {
+        await Supabase.initialize(url: url, anonKey: key);
+      }
+    } catch (e) {
+      print('Web Supabase initialization failed: $e');
+      // Continue without Supabase for now
+    }
+  } else {
+    // For mobile, use the service
+    final supabaseService = SupabaseService();
+    try {
+      await supabaseService.initialize();
+    } catch (e) {
+      print('Mobile Supabase initialization failed: $e');
+    }
 
-  // Start Offline Sync Service
-  SyncService().start();
+    // Start Offline Sync Service only for mobile
+    SyncService().start();
+  }
 
   runApp(const ProviderScope(child: VayloxOpsApp()));
 }
