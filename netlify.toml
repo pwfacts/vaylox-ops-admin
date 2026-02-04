@@ -1,20 +1,16 @@
 [build]
   command = "chmod +x build.sh && ./build.sh"
   publish = "build/web"
-  # Environment variables that should be accessible during build
-  environment = ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "VITE_IMAGEKIT_URL_ENDPOINT", "VITE_IMAGEKIT_PUBLIC_KEY"]
 
-[build.processing]
-  # Disable secret scanning for expected files
-  [build.processing.secrets]
-    # Allow secrets in test files and generated files
-    enabled = true
-    omit_paths = [
-      "test_*.dart",
-      ".dart_tool/**/*", 
-      "build/**/*",
-      ".env.example"
-    ]
+[build.processing.secrets]
+  # Allow secrets in test files and generated files
+  enabled = true
+  omit_paths = [
+    "test_*.dart",
+    ".dart_tool/**/*", 
+    "build/**/*",
+    ".env.example"
+  ]
 
 
 
