@@ -10,22 +10,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:vaylox_ops/main.dart';
+import 'package:vaylox_ops/data/services/supabase_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App loads correctly', (WidgetTester tester) async {
+    // Initialize Supabase for testing
+    final supabaseService = SupabaseService();
+    await supabaseService.initialize();
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const ProviderScope(child: VayloxOpsApp()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Wait for the app to finish loading
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the app loads (should show login screen initially)
+    expect(find.text('JDS MANAGEMENT'), findsOneWidget);
+    expect(find.text('Login Default Account'), findsOneWidget);
   });
 }

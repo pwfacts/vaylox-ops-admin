@@ -275,7 +275,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     }
 
     return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      desiredAccuracy: LocationAccuracy.high,
     );
   }
 

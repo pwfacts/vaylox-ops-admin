@@ -192,7 +192,7 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
                     _buildUnitSelector(),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<DutyShift>(
-                      initialValue: _dutyShift,
+                      value: _dutyShift,
                       items: DutyShift.values
                           .map(
                             (s) => DropdownMenuItem(
@@ -256,7 +256,7 @@ class _EnrollmentScreenState extends ConsumerState<EnrollmentScreen> {
     final unitsAsync = ref.watch(unitsProvider);
     return unitsAsync.when(
       data: (units) => DropdownButtonFormField<String>(
-        initialValue: _selectedUnitId,
+        value: _selectedUnitId,
         decoration: const InputDecoration(labelText: 'Assigned Unit *'),
         items: units
             .map((u) => DropdownMenuItem(value: u.id, child: Text(u.name)))

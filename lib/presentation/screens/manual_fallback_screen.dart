@@ -218,7 +218,7 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<FallbackReason>(
-          initialValue: _reason,
+          value: _reason,
           items: FallbackReason.values
               .map(
                 (r) => DropdownMenuItem(
