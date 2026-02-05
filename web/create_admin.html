@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin User</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body class="font-sans text-white flex items-center justify-center">
+    <div class="max-w-md w-full mx-auto p-4">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4">🔐</div>
+                <h1 class="text-3xl font-bold">Create Admin User</h1>
+                <p class="text-gray-400">Vaylox Ops Admin</p>
+            </div>
+
+            <div id="status" class="mb-4 p-4 rounded-lg hidden"></div>
+
+            <button onclick="createAdmin()"
+                class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold transition">
+                Create Admin Account
+            </button>
+
+            <div class="mt-4 text-sm text-gray-400">
+                <p><strong>Email:</strong> prabhatworldtech@gmail.com</p>
+                <p><strong>Password:</strong> Admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const statusDiv = document.getElementById('status');
+
+        function showStatus(message, type) {
+            statusDiv.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-blue-600');
+            statusDiv.classList.add(type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600');
+            statusDiv.textContent = message;
+        }
+
+        async function createAdmin() {
+            showStatus('Creating admin account...', 'info');
+
+            const email = 'prabhatworldtech@gmail.com';
+            const password = 'Admin123';
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            role: 'admin',
+                            full_name: 'Admin User'
+                        }
+                    }
+                });
+
+                if (error) {
+                    if (error.message.includes('already registered')) {
+                        showStatus('✅ User already exists! You can now login.', 'success');
+                    } else {
+                        showStatus('❌ Error: ' + error.message, 'error');
+                    }
+                } else {
+                    if (data.user) {
+                        showStatus('✅ Admin account created successfully! Check your email for verification link, or you can login directly if email confirmation is disabled.', 'success');
+
+                        // Wait 2 seconds then redirect to admin panel
+                        setTimeout(() => {
+                            window.location.href = '/admin.html';
+                        }, 3000);
+                    } else {
+                        showStatus('⚠️ Account created but confirmation may be required. Check your email.', 'info');
+                    }
+                }
+            } catch (err) {
+                showStatus('❌ Unexpected error: ' + err.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

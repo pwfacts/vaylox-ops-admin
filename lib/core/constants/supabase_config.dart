@@ -27,7 +27,7 @@ class SupabaseConfig {
 
   // Remote Supabase (Production/Staging) - Use environment variables for actual values
   static const String remoteUrl = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
-  static const String remoteAnonKey = 'PLACEHOLDER_KEY_REPLACE_WITH_ENV_VAR';
+  static const String remoteAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
   
   // Local Supabase (Development)
   static const String localUrl = 'http://localhost:54321';

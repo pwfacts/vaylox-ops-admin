@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="results">
+        <h2>Supabase Connection Test</h2>
+        <p>Testing connection...</p>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
+
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function testConnection() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Test basic connection
+                resultsDiv.innerHTML += '<p>✓ Supabase client created</p>';
+                
+                // Test if we can query companies table
+                const { data: companies, error: companiesError } = await supabase
+                    .from('companies')
+                    .select('*')
+                    .limit(5);
+                
+                if (companiesError) {
+                    resultsDiv.innerHTML += `<p>❌ Companies table error: ${companiesError.message}</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p>✓ Companies table accessible (${companies.length} records)</p>`;
+                    resultsDiv.innerHTML += `<pre>${JSON.stringify(companies, null, 2)}</pre>`;
+                }
+
+                // Test guards table
+                const { data: guards, error: guardsError } = await supabase
+                    .from('guards')
+                    .select('*')
+                    .limit(5);
+                
+                if (guardsError) {
+                    resultsDiv.innerHTML += `<p>❌ Guards table error: ${guardsError.message}</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p>✓ Guards table accessible (${guards.length} records)</p>`;
+                }
+
+                // Test units table
+                const { data: units, error: unitsError } = await supabase
+                    .from('units')
+                    .select('*')
+                    .limit(5);
+                
+                if (unitsError) {
+                    resultsDiv.innerHTML += `<p>❌ Units table error: ${unitsError.message}</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p>✓ Units table accessible (${units.length} records)</p>`;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<p>❌ Connection failed: ${error.message}</p>`;
+            }
+        }
+
+        // Run test when page loads
+        testConnection();
+    </script>
+</body>
+</html>
