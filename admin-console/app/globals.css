@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --navy-900: #0A1628;
+  --navy-800: #0F172A;
+  --slate-800: #1E293B;
+  --slate-700: #334155;
+  --slate-600: #475569;
+  --slate-400: #94A3B8;
+  --slate-300: #CBD5E1;
+}
+
+@theme inline {
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+}
+
+body {
+  background: var(--navy-900);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
