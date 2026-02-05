@@ -46,7 +46,7 @@
         <div id="dashboard" class="hidden">
             <div class="flex justify-between items-center mb-8">
                 <h1 class="text-3xl font-bold">Vaylox Ops Dashboard</h1>
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">
+                <button onclick="logoutUser()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">
                     Logout
                 </button>
             </div>
@@ -97,30 +97,34 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Initialize Supabase
+        (function () {
+            const SUPABASE_URL = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
 
-        // Check if already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) showDashboard();
-        });
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            // Check if already logged in
+            window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                if (session) showDashboard();
+            });
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
 
-            if (error) {
-                document.getElementById('error').textContent = error.message;
-                document.getElementById('error').classList.remove('hidden');
-            } else {
-                showDashboard();
-            }
-        });
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+
+                if (error) {
+                    document.getElementById('error').textContent = error.message;
+                    document.getElementById('error').classList.remove('hidden');
+                } else {
+                    showDashboard();
+                }
+            });
+        })();
 
         async function showDashboard() {
             document.getElementById('loginScreen').classList.add('hidden');
@@ -130,27 +134,27 @@
 
         async function loadDashboardData() {
             // Load guards count
-            const { data: guards, error: guardsError } = await supabase
+            const { data: guards, error: guardsError } = await window.supabaseClient
                 .from('guards')
                 .select('*', { count: 'exact' });
             document.getElementById('totalGuards').textContent = guards?.length || 0;
 
             // Load today's attendance
             const today = new Date().toISOString().split('T')[0];
-            const { data: attendance } = await supabase
+            const { data: attendance } = await window.supabaseClient
                 .from('attendance')
                 .select('*', { count: 'exact' })
                 .eq('attendance_date', today);
             document.getElementById('todayAttendance').textContent = attendance?.length || 0;
 
             // Load units count
-            const { data: units } = await supabase
+            const { data: units } = await window.supabaseClient
                 .from('units')
                 .select('*', { count: 'exact' });
             document.getElementById('activeUnits').textContent = units?.length || 0;
 
             // Load recent guards
-            const { data: recentGuards } = await supabase
+            const { data: recentGuards } = await window.supabaseClient
                 .from('guards')
                 .select('*')
                 .order('created_at', { ascending: false })
@@ -170,8 +174,8 @@
             }
         }
 
-        function logout() {
-            supabase.auth.signOut();
+        function logoutUser() {
+            window.supabaseClient.auth.signOut();
             location.reload();
         }
     </script>

@@ -49,6 +49,12 @@
 .env.local
 *.pem
 
+# Admin Console (Next.js)
+admin-console/node_modules/
+admin-console/.next/
+admin-console/.env.local
+admin-console/package-lock.json
+
 # Vercel
 .vercel
 
