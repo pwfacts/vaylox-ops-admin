@@ -290,6 +290,7 @@ class GuardsDeltaSyncNotifier
   final String organizationId;
   Timer? _pollTimer;
   List<Map<String, dynamic>> _cache = [];
+  final Logger _logger = Logger();
 
   GuardsDeltaSyncNotifier(this._syncService, this.organizationId)
       : super(const AsyncValue.loading()) {
