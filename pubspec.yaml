@@ -66,6 +66,7 @@ dependencies:
   crypto: ^3.0.3
   provider: ^6.1.5+1
   flutter_secure_storage: ^10.0.0
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

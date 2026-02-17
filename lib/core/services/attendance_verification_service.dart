@@ -305,7 +305,7 @@ class AttendanceVerificationService {
         .select()
         .eq('organization_id', organizationId)
         .lte('trust_score', maxTrustScore)
-        .is_('approval_status', null)
+        .filter('approval_status', 'is', null)
         .order('trust_score', ascending: true)
         .limit(50);
   }

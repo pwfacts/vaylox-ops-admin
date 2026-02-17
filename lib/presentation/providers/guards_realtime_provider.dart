@@ -33,7 +33,7 @@ class GuardsRealtimeNotifier extends StateNotifier<AsyncValue<List<Guard>>> {
             value: organizationId,
           ),
           callback: (payload) {
-            print('🔄 Realtime update received: ${payload.eventType}');
+            // _logger.d('🔄 Realtime update received: ${payload.eventType}');
             // Reload guards on any change
             _loadGuards();
           },
@@ -75,7 +75,6 @@ class GuardsRealtimeNotifier extends StateNotifier<AsyncValue<List<Guard>>> {
 final guardsRealtimeProvider = StateNotifierProvider.family<
     GuardsRealtimeNotifier, AsyncValue<List<Guard>>, String>(
   (ref, organizationId) {
-    if (organizationId == null) throw Exception('Organization ID required');
     final client = SupabaseService.client;
     return GuardsRealtimeNotifier(client, organizationId);
   },
@@ -87,7 +86,8 @@ final currentOrgGuardsProvider = Provider<AsyncValue<List<Guard>>>((ref) {
 
   return profile.when(
     data: (profile) {
-      return ref.watch(guardsRealtimeProvider(profile.organizationId));
+      if (profile.organizationId == null) return const AsyncValue.loading();
+      return ref.watch(guardsRealtimeProvider(profile.organizationId!));
     },
     loading: () => const AsyncValue.loading(),
     error: (err, stack) => AsyncValue.error(err, stack),

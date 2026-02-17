@@ -228,7 +228,7 @@ class NotificationsPollingNotifier
 
       state = AsyncValue.data(_cache);
     } catch (e) {
-      print('Error marking notification as read: $e');
+      _logger.e('Error marking notification as read: $e');
     }
   }
 
@@ -245,7 +245,7 @@ class NotificationsPollingNotifier
       _cache = _cache.map((n) => {...n, 'is_read': true}).toList();
       state = AsyncValue.data(_cache);
     } catch (e) {
-      print('Error marking all notifications as read: $e');
+      _logger.e('Error marking all notifications as read: $e');
     }
   }
 
@@ -297,6 +297,8 @@ class GuardsDeltaSyncNotifier
   }
 
   Future<void> _initialize() async {
+    _logger
+        .i('DeltaSyncService initialized with organization: $organizationId');
     // Initial full load
     await _fullSync();
 
@@ -345,9 +347,9 @@ class GuardsDeltaSyncNotifier
         _cache = mergedMap.values.toList();
         state = AsyncValue.data(_cache);
       }
-    } catch (e, stack) {
+    } catch (e) {
       // Don't update state on error during delta sync
-      print('Delta sync error for guards: $e');
+      _logger.d('Delta sync error for guards: $e');
     }
   }
 
