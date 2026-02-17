@@ -1,7 +1,7 @@
 import '../services/supabase_service.dart';
 
 class PayrollSettings {
-  final String companyId;
+  final String organizationId;
   final double pfCap;
   final double esicThreshold;
   final double ptThreshold;
@@ -10,7 +10,7 @@ class PayrollSettings {
   final double hraPercentage;
 
   PayrollSettings({
-    required this.companyId,
+    required this.organizationId,
     required this.pfCap,
     required this.esicThreshold,
     required this.ptThreshold,
@@ -21,7 +21,7 @@ class PayrollSettings {
 
   factory PayrollSettings.fromJson(Map<String, dynamic> json) {
     return PayrollSettings(
-      companyId: json['company_id'],
+      organizationId: json['organization_id'],
       pfCap: (json['pf_cap'] as num).toDouble(),
       esicThreshold: (json['esic_threshold'] as num).toDouble(),
       ptThreshold: (json['pt_threshold'] as num).toDouble(),
@@ -44,13 +44,13 @@ class PayrollSettings {
 }
 
 class SettingsRepository {
-  final _client = SupabaseService().client;
+  final _client = SupabaseService.client;
 
-  Future<PayrollSettings> getSettings(String companyId) async {
+  Future<PayrollSettings> getSettings(String organizationId) async {
     final response = await _client
         .from('payroll_settings')
         .select()
-        .eq('company_id', companyId)
+        .eq('organization_id', organizationId)
         .single();
     return PayrollSettings.fromJson(response);
   }
@@ -59,6 +59,6 @@ class SettingsRepository {
     await _client
         .from('payroll_settings')
         .update(settings.toJson())
-        .eq('company_id', settings.companyId);
+        .eq('organization_id', settings.organizationId);
   }
 }

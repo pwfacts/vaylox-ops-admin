@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/guard_model.dart';
 import '../../data/repositories/guard_repository.dart';
@@ -21,12 +21,12 @@ class EnrollmentState {
 
 class GuardEnrollmentNotifier extends StateNotifier<EnrollmentState> {
   final GuardRepository _repository;
-  
+
   GuardEnrollmentNotifier(this._repository) : super(EnrollmentState());
 
   Future<void> enroll({
     required Guard guard,
-    required Map<String, File> documents,
+    required Map<String, XFile> documents,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -36,10 +36,26 @@ class GuardEnrollmentNotifier extends StateNotifier<EnrollmentState> {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
+
+  Future<void> updateGuard({
+    required Guard guard,
+    Map<String, XFile>? documents,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      guard = guard.copyWith(updatedAt: DateTime.now());
+      await _repository.updateGuardDetails(
+          guard: guard, newDocuments: documents);
+      state = state.copyWith(isLoading: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
 }
 
 final guardRepositoryProvider = Provider((ref) => GuardRepository());
 
-final guardEnrollmentProvider = StateNotifierProvider<GuardEnrollmentNotifier, EnrollmentState>((ref) {
+final guardEnrollmentProvider =
+    StateNotifierProvider<GuardEnrollmentNotifier, EnrollmentState>((ref) {
   return GuardEnrollmentNotifier(ref.watch(guardRepositoryProvider));
 });

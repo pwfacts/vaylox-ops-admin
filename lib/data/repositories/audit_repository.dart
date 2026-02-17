@@ -19,7 +19,7 @@ class AuditLogEntry {
 }
 
 class AuditRepository {
-  final _client = SupabaseService().client;
+  final _client = SupabaseService.client;
 
   Future<List<AuditLogEntry>> getRecentAudits() async {
     final List<AuditLogEntry> logs = [];

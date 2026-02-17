@@ -16,7 +16,7 @@ enum AttendanceType { normal, ot }
 
 class Attendance {
   final String id;
-  final String companyId;
+  final String organizationId;
   final String guardId;
   final DateTime attendanceDate;
   final String shift;
@@ -52,7 +52,7 @@ class Attendance {
 
   Attendance({
     required this.id,
-    required this.companyId,
+    required this.organizationId,
     required this.guardId,
     required this.attendanceDate,
     required this.shift,
@@ -100,7 +100,7 @@ class Attendance {
 
     return Attendance(
       id: json['id'],
-      companyId: json['company_id'],
+      organizationId: json['organization_id'],
       guardId: json['guard_id'],
       attendanceDate: DateTime.parse(json['attendance_date']),
       shift: json['shift'],
@@ -163,7 +163,7 @@ class Attendance {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'company_id': companyId,
+      'organization_id': organizationId,
       'guard_id': guardId,
       'attendance_date': attendanceDate.toIso8601String().split('T')[0],
       'shift': shift,

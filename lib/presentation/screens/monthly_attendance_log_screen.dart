@@ -73,9 +73,8 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
-          backgroundColor: isOt
-              ? Colors.orange.withAlpha(26)
-              : Colors.blue.withAlpha(26),
+          backgroundColor:
+              isOt ? Colors.orange.withAlpha(26) : Colors.blue.withAlpha(26),
           child: Text(
             DateFormat('dd').format(record.attendanceDate),
             style: TextStyle(
@@ -143,23 +142,21 @@ class MonthlyAttendanceLogScreen extends ConsumerWidget {
 
 final guardAttendanceLogProvider =
     FutureProvider.family<List<Attendance>, MonthlyAttendanceLogScreen>((
-      ref,
-      params,
-    ) async {
-      final client = SupabaseService().client;
-      final startDate = DateTime(params.year, params.month, 1);
-      final endDate = DateTime(params.year, params.month + 1, 0);
+  ref,
+  params,
+) async {
+  final client = SupabaseService.client;
+  final startDate = DateTime(params.year, params.month, 1);
+  final endDate = DateTime(params.year, params.month + 1, 0);
 
-      final response = await client
-          .from('attendance')
-          .select('*, units(name)')
-          .eq('guard_id', params.guardId)
-          .eq('approval_status', 'APPROVED')
-          .gte('attendance_date', startDate.toIso8601String().split('T')[0])
-          .lte('attendance_date', endDate.toIso8601String().split('T')[0])
-          .order('attendance_date', ascending: true);
+  final response = await client
+      .from('attendance')
+      .select('*, units(name)')
+      .eq('guard_id', params.guardId)
+      .eq('approval_status', 'APPROVED')
+      .gte('attendance_date', startDate.toIso8601String().split('T')[0])
+      .lte('attendance_date', endDate.toIso8601String().split('T')[0])
+      .order('attendance_date', ascending: true);
 
-      return (response as List)
-          .map((json) => Attendance.fromJson(json))
-          .toList();
-    });
+  return (response as List).map((json) => Attendance.fromJson(json)).toList();
+});

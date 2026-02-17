@@ -207,7 +207,7 @@ class _SupervisorBulkScreenState extends ConsumerState<SupervisorBulkScreen> {
 
         final attendance = Attendance(
           id: const Uuid().v4(),
-          companyId: defaultCompanyId,
+          organizationId: defaultorganizationId,
           guardId: guardId,
           attendanceDate: now,
           shift: shift,
@@ -222,7 +222,11 @@ class _SupervisorBulkScreenState extends ConsumerState<SupervisorBulkScreen> {
           updatedAt: now,
         );
 
-        await repo.markAttendance(attendance: attendance);
+        await repo.markAttendance(
+          attendance: attendance,
+          primaryUnitId: guard.assignedUnitId,
+          workedUnitId: _selectedWorkedUnitId!,
+        );
       }
 
       if (mounted) {

@@ -128,18 +128,19 @@ class _AttendanceApprovalScreenState
       final currentUserId = SupabaseService().currentUser!.id;
 
       if (approve) {
-        await repo.approveAttendance(
-          id,
-          currentUserId,
-          'Approved via mobile app',
+        await repo.updateAttendanceStatus(
+          attendanceId: id,
+          status: 'APPROVED',
+          approverId: currentUserId,
+          notes: 'Approved via mobile app',
         );
       } else {
-        // Implement rejection if needed (status = 'REJECTED')
-        await SupabaseService().client.from('attendance').update({
-          'approval_status': 'REJECTED',
-          'approved_by': currentUserId,
-          'approved_at': DateTime.now().toIso8601String(),
-        }).eq('id', id);
+        await repo.updateAttendanceStatus(
+          attendanceId: id,
+          status: 'REJECTED',
+          approverId: currentUserId,
+          notes: 'Rejected via mobile app',
+        );
       }
 
       ref.invalidate(pendingApprovalsProvider);

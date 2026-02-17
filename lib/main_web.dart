@@ -2,13 +2,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'data/services/supabase_service.dart';
 import 'presentation/screens/admin_dashboard_screen.dart';
 import 'presentation/screens/payroll_wizard_screen.dart';
 import 'presentation/screens/guard_list_screen.dart';
 import 'presentation/screens/supervisor_bulk_screen.dart';
 import 'presentation/screens/attendance_approval_screen.dart';
 import 'presentation/screens/user_management_screen.dart';
+import 'presentation/screens/super_admin_dashboard.dart';
+import 'presentation/screens/unit_management_screen.dart';
+import 'core/auth/access_profile.dart';
+import 'core/auth/access_profile_service.dart';
+import 'presentation/screens/supervisor_dashboard.dart';
+import 'presentation/screens/field_officer_dashboard.dart';
+import 'presentation/screens/payroll_dashboard.dart';
+
+import 'package:logger/logger.dart';
+
+final _logger = Logger();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,27 +68,21 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
 
   Future<void> _initializeApp() async {
     try {
-      // Add shorter timeout and better error handling 
-      await Future.any([
-        _doInitialization(),
-        Future.delayed(const Duration(seconds: 5), () {
-          print('Initialization timeout - continuing anyway');
-          return; // Don't throw, just continue
-        })
-      ]);
-      
+      await _doInitialization();
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
+          _hasError = false;
         });
       }
     } catch (e) {
-      print('Initialization error: $e - continuing anyway');
-      // Always continue to avoid blank page
+      _logger.e('Initialization error: $e');
       if (mounted) {
         setState(() {
-          _isInitialized = true; // Continue anyway
-          _hasError = false; // Don't show error, just continue
+          _isInitialized = false;
+          _hasError = true;
+          _errorMessage = e.toString();
         });
       }
     }
@@ -88,43 +92,22 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
     // Use 'const' for dart-define to work properly at build time
     const envUrl = String.fromEnvironment('VITE_SUPABASE_URL');
     const envKey = String.fromEnvironment('VITE_SUPABASE_ANON_KEY');
-    
-    print('Environment URL: $envUrl');
-    print('Environment Key: ${envKey.isNotEmpty ? 'PRESENT' : 'MISSING'}');
-    
-    try {
-      String url;
-      String key;
-      
-      if (envUrl.isNotEmpty && envKey.isNotEmpty) {
-        print('Using environment variables for Supabase initialization');
-        url = envUrl;
-        key = envKey;
-      } else {
-        print('Environment variables not found, using fallback credentials');
-        url = 'https://fcpbexqyyzdvbiwplmjt.supabase.co';
-        key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcGJleHF5eXpkdmJpd3BsbWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NjU2OTYsImV4cCI6MjA4NTI0MTY5Nn0.4PQByF7K7H0kTGgYxchdVJgqy-5pzGTC_FqGJQ50muw';
-      }
-      
-      // Add timeout to prevent hanging
-      await Future.any([
-        Supabase.initialize(
-          url: url,
-          anonKey: key,
-          authOptions: const FlutterAuthClientOptions(
-            authFlowType: AuthFlowType.implicit,
-          ),
+
+    _logger.i('Environment URL: $envUrl');
+    _logger.i('Environment Key: ${envKey.isNotEmpty ? 'PRESENT' : 'MISSING'}');
+
+    if (envUrl.isNotEmpty && envKey.isNotEmpty) {
+      // print('Using environment variables for Supabase initialization'); // Phase 8: Structured logging preferred
+      await Supabase.initialize(
+        url: envUrl,
+        anonKey: envKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.implicit,
         ),
-        Future.delayed(const Duration(seconds: 3), () {
-          throw Exception('Supabase initialization timeout');
-        })
-      ]);
-      
-      print('Supabase initialized successfully');
-    } catch (e) {
-      print('Supabase initialization error: $e - continuing without Supabase');
-      // Create a mock Supabase instance or just continue
-      // The app should still work for UI testing
+      );
+    } else {
+      throw Exception(
+          'CRITICAL: Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Cannot start in production mode.');
     }
   }
 
@@ -164,15 +147,18 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
                 child: const Text('Retry'),
               ),
               const SizedBox(height: 16),
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
-                  // Skip initialization and go directly to login
+                  // Force reload of the web app
+                  // html.window.location.reload(); // Not available in pure Dart/Flutter without import
+                  // For now just retry
                   setState(() {
-                    _isInitialized = true;
                     _hasError = false;
+                    _errorMessage = '';
                   });
+                  _initializeApp();
                 },
-                child: const Text('Skip & Continue'),
+                child: const Text('Reload Application'),
               ),
             ],
           ),
@@ -225,9 +211,109 @@ class WebAuthWrapper extends StatelessWidget {
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data?.session != null) {
-          return const WebAdminHome();
+          return const RoleCheckWrapper();
         }
         return const WebLoginScreen();
+      },
+    );
+  }
+}
+
+class RoleCheckWrapper extends StatelessWidget {
+  const RoleCheckWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<AccessProfile>(
+      future: AccessProfileService().getAccessProfile(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.gpp_bad,
+                          size: 64, color: Colors.redAccent),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Access Denied',
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Return to Login'),
+                          onPressed: () =>
+                              Supabase.instance.client.auth.signOut(),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: Colors.white10,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final profile = snapshot.data;
+        if (profile == null) return const SizedBox();
+
+        if (profile.isPlatformAdmin) {
+          return const SuperAdminDashboardScreen();
+        }
+
+        // Strict Role Routing - Task 2
+        switch (profile.role) {
+          case 'admin':
+            return const WebAdminHome();
+          case 'field_officer':
+            return const FieldOfficerDashboard();
+          case 'supervisor':
+            return const SupervisorDashboard();
+          case 'accountant':
+            return const PayrollDashboard();
+          default:
+            // Fail Closed
+            return Scaffold(
+                body: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                  const Text("Unauthorized Role"),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Supabase.instance.client.auth.signOut(),
+                    child: const Text('Logout'),
+                  )
+                ])));
+        }
       },
     );
   }
@@ -244,116 +330,21 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isSignup = false;
 
-  Future<void> _signup() async {
-    setState(() => _isLoading = true);
-    try {
-      print('Attempting signup with email: ${_emailController.text.trim()}');
-      final response = await Supabase.instance.client.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        emailRedirectTo: null, // Disable email confirmation for dev
-      );
-      print('Signup response: ${response.session != null ? 'Success' : 'Check email'}');
-      print('User created: ${response.user?.id ?? 'No user'}');
-      
-      if (mounted) {
-        if (response.session != null) {
-          // Signup successful with immediate login
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created and logged in successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Navigate directly to admin panel
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const WebAdminHome()),
-          );
-        } else {
-          // Show options for user
-          _showEmailVerificationDialog();
-        }
-      }
-    } catch (e) {
-      print('Signup error: $e');
-      if (mounted) {
-        String errorMessage = 'Signup failed';
-        if (e.toString().contains('User already registered')) {
-          errorMessage = 'Email already registered. Try logging in instead.';
-          setState(() => _isSignup = false);
-        } else if (e.toString().contains('Password should be at least 6 characters')) {
-          errorMessage = 'Password must be at least 6 characters';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$errorMessage\n\nTip: Try the "Skip Login (Dev Mode)" button below'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-  
-  void _showEmailVerificationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Email Verification Required'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('We sent you a verification email, but if you don\'t receive it:'),
-            SizedBox(height: 12),
-            Text('• Check your spam folder'),
-            Text('• Email confirmation might be disabled'),
-            Text('• Use the Skip Login button for development'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              setState(() => _isSignup = false);
-            },
-            child: const Text('Try Login Instead'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _bypassLogin();
-            },
-            child: const Text('Skip to Admin Panel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _bypassLogin() {
-    // Temporary bypass for testing
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const WebAdminHome()),
-    );
-  }
+  // _bypassLogin removed for production security
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
     try {
-      print('Attempting login with email: ${_emailController.text.trim()}');
+      _logger.i('Attempting login with email: ${_emailController.text.trim()}');
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      print('Login response: ${response.session != null ? 'Success' : 'Failed'}');
+      _logger.i(
+          'Login response: ${response.session != null ? 'Success' : 'Failed'}');
     } catch (e) {
-      print('Login error details: $e');
+      _logger.e('Login error details: $e');
       if (mounted) {
         String errorMessage = 'Login failed';
         if (e.toString().contains('Invalid login credentials')) {
@@ -363,7 +354,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
         } else if (e.toString().contains('400')) {
           errorMessage = 'Invalid request. Check email format.';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$errorMessage\nDetails: $e'),
@@ -440,7 +431,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : (_isSignup ? _signup : _login),
+                        onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           backgroundColor: Colors.blueAccent,
@@ -453,79 +444,29 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : Text(
-                                _isSignup ? 'Create Account' : 'Sign In',
-                                style: const TextStyle(fontSize: 16),
+                            : const Text(
+                                'Sign In',
+                                style: TextStyle(fontSize: 16),
                               ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(
+                    const SizedBox(height: 24),
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isSignup = !_isSignup;
-                            });
-                          },
-                          child: Text(
-                            _isSignup 
-                                ? 'Already have account? Sign In' 
-                                : 'Need an account? Sign Up',
-                            style: const TextStyle(color: Colors.blueAccent),
-                          ),
+                        Icon(Icons.lock, size: 14, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text(
+                          'Authorized Personnel Only',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _bypassLogin,
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.orange.withOpacity(0.2),
-                        padding: const EdgeInsets.all(12),
-                      ),
-                      child: const Text(
-                        '🚀 Skip Login (Demo Mode)',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ),
+                    // Skip Login button removed
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Test Credentials:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Email: admin@vaylox.com',
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              color: Colors.white70,
-                            ),
-                          ),
-                          Text(
-                            'Password: admin123',
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Test Credentials container removed
                   ],
                 ),
               ),
@@ -579,6 +520,16 @@ class WebAdminHome extends StatelessWidget {
                   unitName: 'All Units',
                 ),
               ),
+            ),
+          ),
+          _buildCard(
+            context,
+            'Site / Unit Management',
+            Icons.domain,
+            Colors.tealAccent,
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UnitManagementScreen()),
             ),
           ),
           _buildCard(

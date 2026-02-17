@@ -1,6 +1,8 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 import '../../data/services/supabase_service.dart';
+
+final _logger = Logger();
 
 class DashboardStats {
   final int totalGuards;
@@ -9,7 +11,7 @@ class DashboardStats {
   final double monthlyExpense;
   final Map<String, int> attendanceTypeDistribution;
   final List<ManualFallbackAlert> fallbackAlerts;
-  
+
   // Enhanced metrics per PRD
   final double guardGrowthRate; // % change vs last month
   final double attendanceGrowthRate; // % change vs last month
@@ -20,7 +22,7 @@ class DashboardStats {
   final List<AttendanceTrendData> attendanceTrend;
   final List<UnitDistributionData> unitDistribution;
   final List<OtAnalysisData> otAnalysis;
-  
+
   DashboardStats({
     required this.totalGuards,
     required this.totalUnits,
@@ -43,7 +45,7 @@ class DashboardStats {
 class AttendanceTrendData {
   final DateTime date;
   final double attendanceRate;
-  
+
   AttendanceTrendData({required this.date, required this.attendanceRate});
 }
 
@@ -51,8 +53,11 @@ class UnitDistributionData {
   final String unitName;
   final int guardCount;
   final String areaName;
-  
-  UnitDistributionData({required this.unitName, required this.guardCount, required this.areaName});
+
+  UnitDistributionData(
+      {required this.unitName,
+      required this.guardCount,
+      required this.areaName});
 }
 
 class OtAnalysisData {
@@ -60,8 +65,12 @@ class OtAnalysisData {
   final int normalHours;
   final int otHours;
   final double otPercentage;
-  
-  OtAnalysisData({required this.unitName, required this.normalHours, required this.otHours, required this.otPercentage});
+
+  OtAnalysisData(
+      {required this.unitName,
+      required this.normalHours,
+      required this.otHours,
+      required this.otPercentage});
 }
 
 class ManualFallbackAlert {
@@ -78,19 +87,10 @@ class ManualFallbackAlert {
 
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   try {
-    final client = SupabaseService().client;
+    final client = SupabaseService.client;
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
-    final lastMonth = DateTime(now.year, now.month - 1, 1);
     final todayStr = now.toIso8601String().split('T')[0];
-
-    // Mock data for development when Supabase isn't available
-    try {
-      await client.from('guards').select('id').limit(1);
-    } catch (e) {
-      print('Supabase not available, using mock data');
-      return _getMockDashboardData();
-    }
 
     // 1. Total Guards & Units (with growth calculation)
     final guardsRes = await client
@@ -109,8 +109,8 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     final lastMonthGuards = (guardsRes as List)
         .where((g) => DateTime.parse(g['created_at']).isBefore(startOfMonth))
         .length;
-    final guardGrowthRate = lastMonthGuards > 0 
-        ? ((totalGuards - lastMonthGuards) / lastMonthGuards) * 100 
+    final guardGrowthRate = lastMonthGuards > 0
+        ? ((totalGuards - lastMonthGuards) / lastMonthGuards) * 100
         : 0.0;
 
     // 2. Today's Attendance
@@ -121,12 +121,13 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
         .eq('approval_status', 'APPROVED');
 
     final presentToday = (attendanceTodayRes as List).length;
-    final attendancePct = totalGuards > 0
-        ? (presentToday / totalGuards) * 100
-        : 0.0;
+    final attendancePct =
+        totalGuards > 0 ? (presentToday / totalGuards) * 100 : 0.0;
 
-    // Calculate attendance growth (mock calculation)
-    final attendanceGrowthRate = 3.0; // Mock: 3% increase
+    // Calculate attendance growth
+    // REAL CALCULATION: Compare with same day last month or avg of last month
+    // For now, defaulting to 0 if no data
+    final attendanceGrowthRate = 0.0;
 
     // 3. Monthly Expense
     final slipsRes = await client
@@ -145,7 +146,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       }
     }
 
-    final expenseGrowthRate = 5.0; // Mock: 5% increase
+    final expenseGrowthRate = 0.0; // Todo: Implement comparison
 
     // 4. Pending Approvals
     final pendingApprovalsRes = await client
@@ -165,9 +166,9 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     int manualFallbackCount = (fallbackRes as List)
         .where((row) => row['attendance_method'] == 'MANUAL_FALLBACK')
         .length;
-    
-    final manualFallbackRate = totalAttendance > 0 
-        ? (manualFallbackCount / totalAttendance) * 100 
+
+    final manualFallbackRate = totalAttendance > 0
+        ? (manualFallbackCount / totalAttendance) * 100
         : 0.0;
 
     // Generate guard-specific fallback alerts
@@ -177,7 +178,8 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       final method = row['attendance_method'];
       final name = row['guards']?['full_name'] ?? 'Unknown';
 
-      guardStats.putIfAbsent(gid, () => {'name': name, 'total': 0, 'manual': 0});
+      guardStats.putIfAbsent(
+          gid, () => {'name': name, 'total': 0, 'manual': 0});
       guardStats[gid]!['total']++;
       if (method == 'MANUAL_FALLBACK') {
         guardStats[gid]!['manual']++;
@@ -203,18 +205,25 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     for (int i = 5; i >= 0; i--) {
       final month = DateTime(now.year, now.month - i, 1);
       final monthStr = month.toIso8601String().split('T')[0];
-      
+
       final monthAttendanceRes = await client
           .from('attendance')
           .select('id')
           .gte('attendance_date', monthStr)
-          .lt('attendance_date', DateTime(month.year, month.month + 1, 1).toIso8601String().split('T')[0])
+          .lt(
+              'attendance_date',
+              DateTime(month.year, month.month + 1, 1)
+                  .toIso8601String()
+                  .split('T')[0])
           .eq('approval_status', 'APPROVED');
-      
+
       final attendanceCount = (monthAttendanceRes as List).length;
-      final expectedAttendance = totalGuards * DateTime(month.year, month.month + 1, 0).day; // Days in month
-      final rate = expectedAttendance > 0 ? (attendanceCount / expectedAttendance) * 100 : 0.0;
-      
+      final expectedAttendance = totalGuards *
+          DateTime(month.year, month.month + 1, 0).day; // Days in month
+      final rate = expectedAttendance > 0
+          ? (attendanceCount / expectedAttendance) * 100
+          : 0.0;
+
       attendanceTrend.add(AttendanceTrendData(
         date: month,
         attendanceRate: rate.clamp(0, 100),
@@ -244,12 +253,13 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     for (var row in (otRes as List)) {
       final unitName = row['units']?['name'] ?? 'Unknown';
       final type = row['type'] ?? 'NORMAL';
-      
+
       unitOtStats.putIfAbsent(unitName, () => {'normal': 0, 'ot': 0});
       if (type == 'OT') {
         unitOtStats[unitName]!['ot'] = (unitOtStats[unitName]!['ot'] ?? 0) + 1;
       } else {
-        unitOtStats[unitName]!['normal'] = (unitOtStats[unitName]!['normal'] ?? 0) + 1;
+        unitOtStats[unitName]!['normal'] =
+            (unitOtStats[unitName]!['normal'] ?? 0) + 1;
       }
     }
 
@@ -258,7 +268,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       final ot = entry.value['ot'] ?? 0;
       final total = normal + ot;
       final otPct = total > 0 ? (ot / total) * 100 : 0.0;
-      
+
       otAnalysis.add(OtAnalysisData(
         unitName: entry.key,
         normalHours: normal * 8, // Assuming 8-hour shifts
@@ -273,8 +283,11 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       todayAttendancePercentage: attendancePct,
       monthlyExpense: totalExpense,
       attendanceTypeDistribution: {
-        'Normal': attendanceTrend.isNotEmpty ? (attendanceTrend.last.attendanceRate * totalGuards / 100).round() : 0,
-        'OT': otAnalysis.fold(0, (sum, data) => sum + (data.otHours / 4).round()),
+        'Normal': attendanceTrend.isNotEmpty
+            ? (attendanceTrend.last.attendanceRate * totalGuards / 100).round()
+            : 0,
+        'OT':
+            otAnalysis.fold(0, (sum, data) => sum + (data.otHours / 4).round()),
       },
       fallbackAlerts: alerts,
       guardGrowthRate: guardGrowthRate,
@@ -288,49 +301,8 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       otAnalysis: otAnalysis,
     );
   } catch (e) {
-    print('Dashboard data fetch error: $e');
-    return _getMockDashboardData();
+    // Phase 8: Log and rethrow
+    _logger.e('Dashboard Data Error: $e');
+    rethrow;
   }
 });
-
-DashboardStats _getMockDashboardData() {
-  final now = DateTime.now();
-  return DashboardStats(
-    totalGuards: 180,
-    totalUnits: 12,
-    todayAttendancePercentage: 98.5,
-    monthlyExpense: 520000,
-    attendanceTypeDistribution: {'Normal': 165, 'OT': 45},
-    fallbackAlerts: [
-      ManualFallbackAlert(guardName: 'Pritam Kumar (BH001)', fallbackPercentage: 35.0, totalDuties: 20),
-      ManualFallbackAlert(guardName: 'Amit Patel (RJ005)', fallbackPercentage: 42.0, totalDuties: 18),
-    ],
-    guardGrowthRate: 2.0,
-    attendanceGrowthRate: 3.0,
-    expenseGrowthRate: 5.0,
-    pendingPayments: 45000,
-    pendingApprovals: 12,
-    manualFallbackRate: 8.5,
-    attendanceTrend: List.generate(6, (index) {
-      final month = DateTime(now.year, now.month - (5 - index), 1);
-      return AttendanceTrendData(
-        date: month,
-        attendanceRate: 95.0 + (index * 0.5), // Trending upward
-      );
-    }),
-    unitDistribution: [
-      UnitDistributionData(unitName: 'Bhawani Mall', guardCount: 25, areaName: 'Central Zone'),
-      UnitDistributionData(unitName: 'City Center', guardCount: 20, areaName: 'Central Zone'),
-      UnitDistributionData(unitName: 'Tech Park Alpha', guardCount: 30, areaName: 'Tech Zone'),
-      UnitDistributionData(unitName: 'Residential Complex', guardCount: 18, areaName: 'Residential Zone'),
-      UnitDistributionData(unitName: 'Industrial Unit A', guardCount: 22, areaName: 'Industrial Zone'),
-      UnitDistributionData(unitName: 'Corporate Plaza', guardCount: 35, areaName: 'Business Zone'),
-    ],
-    otAnalysis: [
-      OtAnalysisData(unitName: 'Bhawani Mall', normalHours: 200, otHours: 60, otPercentage: 23.0),
-      OtAnalysisData(unitName: 'Tech Park Alpha', normalHours: 240, otHours: 80, otPercentage: 25.0),
-      OtAnalysisData(unitName: 'Corporate Plaza', normalHours: 280, otHours: 40, otPercentage: 12.5),
-      OtAnalysisData(unitName: 'City Center', normalHours: 160, otHours: 50, otPercentage: 24.0),
-    ],
-  );
-}

@@ -213,17 +213,14 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
               style: TextStyle(color: Colors.grey[400]),
             ),
             const SizedBox(height: 32),
-
             _buildMonthPicker(),
             const SizedBox(height: 24),
             _buildUnitSettings(),
             const SizedBox(height: 32),
-
             if (payrollState.isLoading)
               const Center(child: CircularProgressIndicator())
             else
               _buildActionButton(),
-
             if (payrollState.error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
@@ -232,7 +229,6 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
                   style: const TextStyle(color: AppColors.error),
                 ),
               ),
-
             const SizedBox(height: 32),
             if (payrollState.activeMonthSlips.isNotEmpty)
               Expanded(
@@ -250,7 +246,8 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
                         itemBuilder: (context, index) {
                           // Note: For actual processing, we need the GUARD objects
                           // Here we use the list of guards from guardsByUnitProvider
-                          return const SizedBox.shrink(); // Handled by guards iterator in _buildGuardAdjustmentList
+                          return const SizedBox
+                              .shrink(); // Handled by guards iterator in _buildGuardAdjustmentList
                         },
                       ),
                     ),
@@ -351,7 +348,8 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
   }
 
   Widget _buildActionButton() {
-    return const SizedBox.shrink(); // Action is moved inside the adjustment list
+    return const SizedBox
+        .shrink(); // Action is moved inside the adjustment list
   }
 
   Widget _buildGuardAdjustmentList() {
@@ -727,9 +725,7 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
   Future<void> _exportDetailedExcel() async {
     final guardsAsync = ref.read(guardsByUnitProvider(widget.unitId));
     guardsAsync.whenData((guards) {
-      ref
-          .read(payrollProvider.notifier)
-          .exportToExcel(
+      ref.read(payrollProvider.notifier).exportToExcel(
             guards: guards,
             unitName: widget.unitName,
             month: _selectedMonth.month,
@@ -754,8 +750,7 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
   }
 
   Future<void> _runPayrollForGuard(Guard guard) async {
-    final calcDays =
-        int.tryParse(_calcDaysControllers[guard.id]?.text ?? '') ??
+    final calcDays = int.tryParse(_calcDaysControllers[guard.id]?.text ?? '') ??
         int.tryParse(_unitCalculationDaysController.text) ??
         30;
 
@@ -798,9 +793,7 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
       isPtEnabled: _ptToggles[guard.id] ?? guard.isPtEnabled,
     );
 
-    await ref
-        .read(payrollProvider.notifier)
-        .runPayrollForGuard(
+    await ref.read(payrollProvider.notifier).runPayrollForGuard(
           guard: guardWithOverrides,
           month: _selectedMonth.month,
           year: _selectedMonth.year,
@@ -811,7 +804,7 @@ class _PayrollWizardScreenState extends ConsumerState<PayrollWizardScreen> {
           manualOtBasic: otBasic,
           manualOtAmount: otAmount,
           overrideBy:
-              SupabaseService().client.auth.currentUser?.email ?? 'Supervisor',
+              SupabaseService.client.auth.currentUser?.email ?? 'Supervisor',
           overrideNote: note,
           canteenDeduction: canteen,
           penaltyDeduction: penalty,

@@ -303,7 +303,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
       final attendance = Attendance(
         id: const Uuid().v4(),
-        companyId: defaultCompanyId,
+        organizationId: defaultorganizationId,
         guardId: profile.id,
         attendanceDate: DateTime.now(),
         shift: _determineShift(),
@@ -323,9 +323,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       );
 
       try {
-        await ref
-            .read(attendanceRepositoryProvider)
-            .markAttendance(attendance: attendance);
+        await ref.read(attendanceRepositoryProvider).markAttendance(
+              attendance: attendance,
+              primaryUnitId: profile.assignedUnitId,
+              workedUnitId: _selectedUnitId!,
+            );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Success: Attendance marked!')),

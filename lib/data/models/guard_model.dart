@@ -2,11 +2,12 @@ enum DutyShift { day, night, both }
 
 class Guard {
   final String id;
-  final String companyId;
+  final String organizationId;
   final String? userId; // Optional link to a user (e.g. supervisor)
   final String guardCode;
   final String fullName;
   final String phone;
+  final String? email;
   final String emergencyContact;
   final String aadharNumber;
   final String? panNumber;
@@ -47,11 +48,12 @@ class Guard {
 
   Guard({
     required this.id,
-    required this.companyId,
+    required this.organizationId,
     this.userId,
     required this.guardCode,
     required this.fullName,
     required this.phone,
+    this.email,
     required this.emergencyContact,
     required this.aadharNumber,
     this.panNumber,
@@ -83,11 +85,12 @@ class Guard {
   factory Guard.fromJson(Map<String, dynamic> json) {
     return Guard(
       id: json['id'],
-      companyId: json['company_id'],
+      organizationId: json['organization_id'],
       userId: json['user_id'],
       guardCode: json['guard_code'],
       fullName: json['full_name'],
       phone: json['phone'],
+      email: json['email'],
       emergencyContact: json['emergency_contact'],
       aadharNumber: json['aadhar_number'],
       panNumber: json['pan_number'],
@@ -124,15 +127,18 @@ class Guard {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'company_id': companyId,
+      'organization_id': organizationId,
       'user_id': userId,
       'guard_code': guardCode,
       'full_name': fullName,
       'phone': phone,
+      'email': email,
       'emergency_contact': emergencyContact,
       'aadhar_number': aadharNumber,
       'pan_number': panNumber,
-      'date_of_birth': dateOfBirth.toIso8601String(),
+      'date_of_birth': dateOfBirth
+          .toIso8601String()
+          .split('T')[0], // Only date portion (YYYY-MM-DD)
       'aadhar_front_url': aadharFrontUrl,
       'aadhar_back_url': aadharBackUrl,
       'pan_card_url': panCardUrl,
@@ -158,11 +164,12 @@ class Guard {
 
   Guard copyWith({
     String? id,
-    String? companyId,
+    String? organizationId,
     String? userId,
     String? guardCode,
     String? fullName,
     String? phone,
+    String? email,
     String? emergencyContact,
     String? aadharNumber,
     String? panNumber,
@@ -192,11 +199,12 @@ class Guard {
   }) {
     return Guard(
       id: id ?? this.id,
-      companyId: companyId ?? this.companyId,
+      organizationId: organizationId ?? this.organizationId,
       userId: userId ?? this.userId,
       guardCode: guardCode ?? this.guardCode,
       fullName: fullName ?? this.fullName,
       phone: phone ?? this.phone,
+      email: email ?? this.email,
       emergencyContact: emergencyContact ?? this.emergencyContact,
       aadharNumber: aadharNumber ?? this.aadharNumber,
       panNumber: panNumber ?? this.panNumber,

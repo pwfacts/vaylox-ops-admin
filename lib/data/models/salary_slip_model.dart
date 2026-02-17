@@ -1,6 +1,6 @@
 class SalarySlip {
   final String id;
-  final String companyId;
+  final String organizationId;
   final String guardId;
   final int month;
   final int year;
@@ -52,7 +52,7 @@ class SalarySlip {
 
   SalarySlip({
     required this.id,
-    required this.companyId,
+    required this.organizationId,
     required this.guardId,
     required this.month,
     required this.year,
@@ -91,7 +91,7 @@ class SalarySlip {
   factory SalarySlip.fromJson(Map<String, dynamic> json) {
     return SalarySlip(
       id: json['id'],
-      companyId: json['company_id'],
+      organizationId: json['organization_id'],
       guardId: json['guard_id'],
       month: json['month'],
       year: json['year'],
@@ -135,7 +135,7 @@ class SalarySlip {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'company_id': companyId,
+      'organization_id': organizationId,
       'guard_id': guardId,
       'month': month,
       'year': year,
@@ -172,7 +172,7 @@ class SalarySlip {
 
   SalarySlip copyWith({
     String? id,
-    String? companyId,
+    String? organizationId,
     String? guardId,
     int? month,
     int? year,
@@ -209,7 +209,7 @@ class SalarySlip {
   }) {
     return SalarySlip(
       id: id ?? this.id,
-      companyId: companyId ?? this.companyId,
+      organizationId: organizationId ?? this.organizationId,
       guardId: guardId ?? this.guardId,
       month: month ?? this.month,
       year: year ?? this.year,

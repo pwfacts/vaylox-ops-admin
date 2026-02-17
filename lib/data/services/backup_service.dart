@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import './supabase_service.dart';
 
 class BackupService {
-  final _client = SupabaseService().client;
+  final _client = SupabaseService.client;
   final _logger = Logger();
 
   // Encryption configuration

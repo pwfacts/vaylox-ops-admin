@@ -81,7 +81,7 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
       // 2. Create Attendance record
       final attendance = Attendance(
         id: const Uuid().v4(),
-        companyId: defaultCompanyId,
+        organizationId: defaultorganizationId,
         guardId: widget.profile.id,
         attendanceDate: DateTime.now(),
         shift: widget.shift,
@@ -92,9 +92,8 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
         attendanceMethod: AttendanceMethod.manualFallback,
         faceVerified: false,
         fallbackReason: _reason,
-        fallbackReasonText: _reason == FallbackReason.other
-            ? _reasonTextController.text
-            : null,
+        fallbackReasonText:
+            _reason == FallbackReason.other ? _reasonTextController.text : null,
         fallbackPhotoUrl: uploadResult['url'],
         approvalStatus: ApprovalStatus.pendingApproval,
         gpsLocation: widget.location,
@@ -105,7 +104,11 @@ class _ManualFallbackScreenState extends State<ManualFallbackScreen> {
       );
 
       // 3. Save
-      await _repository.markAttendance(attendance: attendance);
+      await _repository.markAttendance(
+        attendance: attendance,
+        primaryUnitId: widget.primaryUnitId ?? widget.profile.assignedUnitId,
+        workedUnitId: widget.workedUnitId ?? widget.profile.assignedUnitId,
+      );
 
       if (mounted) {
         Navigator.pop(context, true); // Success

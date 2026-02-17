@@ -6,13 +6,13 @@ import '../models/salary_slip_model.dart';
 import '../services/supabase_service.dart';
 
 class SalaryCalculationService {
-  final SupabaseClient _client = SupabaseService().client;
+  final SupabaseClient _client = SupabaseService.client;
 
-  Future<Map<String, dynamic>> getPayrollSettings(String companyId) async {
+  Future<Map<String, dynamic>> getPayrollSettings(String organizationId) async {
     final response = await _client
         .from('payroll_settings')
         .select()
-        .eq('company_id', companyId)
+        .eq('organization_id', organizationId)
         .single();
     return response;
   }
@@ -77,7 +77,7 @@ class SalaryCalculationService {
     final absentDaysCount = max(0, baseDaysForSalary - finalPresentDays);
 
     // 3. Get Payroll Settings
-    final settings = await getPayrollSettings(guard.companyId);
+    final settings = await getPayrollSettings(guard.organizationId);
     final double pfRate = (settings['pf_percentage'] as num).toDouble() / 100;
     final double esicRate =
         (settings['esic_percentage'] as num).toDouble() / 100;
@@ -118,8 +118,7 @@ class SalaryCalculationService {
     final bool isLwfMonth = lwfMonths?.contains(month) ?? false;
     final double lwfActual = isLwfMonth ? lwfAmount : 0;
 
-    final double totalDeductions =
-        pfDeduction +
+    final double totalDeductions = pfDeduction +
         esicDeduction +
         ptDeduction +
         lwfActual +
@@ -135,7 +134,7 @@ class SalaryCalculationService {
 
     return SalarySlip(
       id: '',
-      companyId: guard.companyId,
+      organizationId: guard.organizationId,
       guardId: guard.id,
       month: month,
       year: year,
@@ -159,8 +158,7 @@ class SalaryCalculationService {
       totalDeductions: totalDeductions,
       netPay: netPay,
       manualOverrideBy: overrideBy,
-      manualOverrideAt:
-          (manualPresentDays != null ||
+      manualOverrideAt: (manualPresentDays != null ||
               manualOtDays != null ||
               manualBasic != null)
           ? DateTime.now()
@@ -168,7 +166,6 @@ class SalaryCalculationService {
       manualOverrideNote: overrideNote,
       attendanceSuggestedDays: presentDaysCountSug,
       attendanceSuggestedOtDays: otDaysCountSug,
-      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }

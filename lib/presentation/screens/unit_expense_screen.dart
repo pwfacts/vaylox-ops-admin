@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 final unitExpensesProvider = FutureProvider<List<Map<String, dynamic>>>((
   ref,
 ) async {
-  final client = SupabaseService().client;
+  final _client = SupabaseService.client;
   final now = DateTime.now();
 
   // Fetch salary slips grouped by unit
   // join with guards to get unit_name (or assigned_unit_id)
-  final response = await client
+  final response = await _client
       .from('salary_slips')
       .select(
         'net_pay, gross_pay, pf_deduction, esic_deduction, guards(assigned_unit_id, units(name))',

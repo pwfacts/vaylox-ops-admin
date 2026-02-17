@@ -1,31 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 import '../../data/services/supabase_service.dart';
+import '../../core/auth/access_profile_service.dart';
+
+final _logger = Logger();
 
 final staffListProvider = FutureProvider<List<Map<String, dynamic>>>((
   ref,
 ) async {
-  final client = SupabaseService().client;
-  // This assumes a 'profiles' or 'users' table exists since the PRD references 'users' ID
-  // If it doesn't exist, we will fallback to a dummy list for demonstration.
+  final client = SupabaseService.client;
   try {
-    final response = await client.from('profiles').select();
-    return List<Map<String, dynamic>>.from(response);
+    // 1. Get current organization
+    final profile = await AccessProfileService().getAccessProfile();
+    final orgId = profile.organizationId;
+
+    if (orgId == null) return [];
+
+    // 2. Fetch staff memberships for this org
+    final response = await client
+        .from('organization_users')
+        .select('role, users(id, full_name, email, status, created_at)')
+        .eq('organization_id', orgId);
+
+    final List<Map<String, dynamic>> results = [];
+    for (var membership in List<Map<String, dynamic>>.from(response)) {
+      final userData = membership['users'] as Map<String, dynamic>?;
+      if (userData != null) {
+        results.add({
+          ...userData,
+          'role': membership['role'], // Use the org-specific role
+        });
+      }
+    }
+    return results;
   } catch (e) {
-    // Return dummy data if table not found
-    return [
-      {'full_name': 'Prabhat Singh', 'role': 'Admin', 'email': 'admin@jds.com'},
-      {
-        'full_name': 'Rahul Kumar',
-        'role': 'Supervisor',
-        'email': 'rahul@jds.com',
-      },
-      {
-        'full_name': 'Sanjay Dev',
-        'role': 'Field Officer',
-        'email': 'sanjay@jds.com',
-      },
-    ];
+    _logger.e('Error fetching users: $e');
+    rethrow;
   }
 });
 
@@ -90,15 +101,46 @@ class UserManagementScreen extends ConsumerWidget {
               onPressed: () async {
                 final client = SupabaseService().client;
                 try {
-                  // In a real app, you'd use a cloud function to create the actual auth user
-                  // For now, we'll create the profile which triggers the workflow.
-                  await client.from('profiles').insert({
-                    'full_name': nameController.text,
+                  // Map display role to db role (e.g. Field Officer -> field_officer)
+                  final dbRole =
+                      selectedRole.toLowerCase().replaceAll(' ', '_');
+
+                  // Get current user's organization ID
+                  final profile =
+                      await AccessProfileService().getAccessProfile();
+                  final organizationId = profile.organizationId;
+
+                  if (organizationId == null) {
+                    throw Exception(
+                        'You must be logged in to an organization to add users.');
+                  }
+
+                  // Note: In a real app, you'd use a service or edge function to create auth user
+                  // This screen seems to assume the user already exists or is being invited.
+                  // For now, mirroring the existing logic but splitting into two tables.
+
+                  // 1. Create User Base Profile (Simplified for internal staff)
+                  // In Supabase, usually auth.signUp triggers this, but we mirror existing manual insert
+                  final userInsertRes = await client
+                      .from('users')
+                      .insert({
+                        'full_name': nameController.text,
+                        'email': emailController.text,
+                        'status': 'active',
+                      })
+                      .select('id')
+                      .single();
+
+                  final newUserId = userInsertRes['id'];
+
+                  // 2. Link to Organization
+                  await client.from('organization_users').insert({
+                    'user_id': newUserId,
+                    'organization_id': organizationId,
+                    'role': dbRole,
                     'email': emailController.text,
-                    'role': selectedRole,
-                    'company_id':
-                        'c0a80101-b632-4e6a-9818-1d2f9d5e3f4b', // Default Company
                   });
+
                   if (context.mounted) {
                     Navigator.pop(context);
                     ref.invalidate(staffListProvider);
@@ -107,6 +149,7 @@ class UserManagementScreen extends ConsumerWidget {
                     );
                   }
                 } catch (e) {
+                  _logger.e('Error adding user: $e');
                   if (context.mounted) {
                     ScaffoldMessenger.of(
                       context,

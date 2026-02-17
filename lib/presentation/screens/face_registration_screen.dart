@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,17 +16,32 @@ class FaceRegistrationScreen extends StatefulWidget {
 
 class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
   final _picker = ImagePicker();
-  final faceDetector = FaceDetector(
-    options: FaceDetectorOptions(
-      enableLandmarks: true,
-      performanceMode: FaceDetectorMode.accurate,
-    ),
-  );
+  FaceDetector? faceDetector;
 
   bool _isProcessing = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    // Only initialize face detector on mobile platforms
+    if (!kIsWeb) {
+      faceDetector = FaceDetector(
+        options: FaceDetectorOptions(
+          enableLandmarks: true,
+          performanceMode: FaceDetectorMode.accurate,
+        ),
+      );
+    }
+  }
+
   Future<void> _captureAndProcess() async {
+    // On web, skip face detection and just capture image
+    if (kIsWeb) {
+      _captureImageWebFallback();
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _error = null;
@@ -43,7 +59,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
       }
 
       final inputImage = InputImage.fromFilePath(image.path);
-      final List<Face> faces = await faceDetector.processImage(inputImage);
+      final List<Face> faces = await faceDetector!.processImage(inputImage);
 
       if (faces.isEmpty) {
         throw Exception(
@@ -87,9 +103,42 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     }
   }
 
+  Future<void> _captureImageWebFallback() async {
+    setState(() {
+      _isProcessing = true;
+      _error = null;
+    });
+
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery, // Web doesn't support camera source
+      );
+
+      if (image == null) {
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      // On web, we can't do face detection, so we create a dummy encoding
+      final Map<String, dynamic> encoding = {
+        'platform': 'web',
+        'note': 'Face detection not available on web. Using image upload only.',
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      widget.onFaceRegistered(jsonEncode(encoding), image);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _isProcessing = false);
+    }
+  }
+
   @override
   void dispose() {
-    faceDetector.close();
+    faceDetector?.close();
     super.dispose();
   }
 
@@ -110,10 +159,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Please ensure you are in a well-lit area and looking directly at the camera.',
+              Text(
+                kIsWeb
+                    ? 'Please upload a clear photo of the person\'s face.'
+                    : 'Please ensure you are in a well-lit area and looking directly at the camera.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: const TextStyle(color: Colors.grey),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 24),
@@ -127,8 +178,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _captureAndProcess,
-                    icon: const Icon(Icons.camera),
-                    label: const Text('Capture Face'),
+                    icon: Icon(kIsWeb ? Icons.upload : Icons.camera),
+                    label: Text(kIsWeb ? 'Upload Photo' : 'Capture Face'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
                     ),

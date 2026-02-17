@@ -1,26 +1,30 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:logger/logger.dart';
 import '../../core/constants/app_constants.dart';
+
+final _logger = Logger();
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
   SupabaseService._internal();
 
-  late final SupabaseClient client;
+  // Use a getter to access the client, ensuring it's always the current instance
+  // This avoids LateInitializationError when initialization happens externally (e.g. main_web.dart)
+  static SupabaseClient get client => Supabase.instance.client;
 
   Future<void> initialize() async {
+    // This method is kept for compatibility but initialization is primarily handled by main.dart/main_web.dart
     try {
       await Supabase.initialize(
-        url: supabaseUrl, 
+        url: supabaseUrl,
         anonKey: supabaseAnonKey,
         authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.implicit, // Better for web
+          authFlowType: AuthFlowType.implicit,
         ),
       );
-      client = Supabase.instance.client;
     } catch (e) {
-      // If initialization fails, still create client to prevent null errors
-      print('Supabase initialization failed: $e');
+      _logger.e('Supabase initialization failed: $e');
       rethrow;
     }
   }

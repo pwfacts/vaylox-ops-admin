@@ -4,7 +4,7 @@ import '../../data/repositories/settings_repository.dart';
 import '../../core/constants/app_constants.dart';
 
 final settingsProvider = FutureProvider<PayrollSettings>((ref) async {
-  return SettingsRepository().getSettings(AppConstants.companyId);
+  return SettingsRepository().getSettings(AppConstants.organizationId);
 });
 
 class SystemSettingsScreen extends ConsumerStatefulWidget {
@@ -208,7 +208,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
   Future<void> _saveSettings() async {
     final updated = PayrollSettings(
-      companyId: AppConstants.companyId,
+      organizationId: AppConstants.organizationId,
       pfCap: double.tryParse(_pfCapController.text) ?? 15000,
       esicThreshold: double.tryParse(_esicThresholdController.text) ?? 21000,
       ptThreshold: double.tryParse(_ptThresholdController.text) ?? 12000,

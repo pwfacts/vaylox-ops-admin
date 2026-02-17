@@ -62,9 +62,8 @@ class ExportService {
     sheet1.appendRow(headers);
     for (var i = 0; i < headers.length; i++) {
       sheet1
-              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-              .cellStyle =
-          headerStyle;
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .cellStyle = headerStyle;
     }
 
     for (var slip in slips) {
@@ -82,7 +81,7 @@ class ExportService {
         TextCellValue(
           slip.otPay > 0
               ? (slip.otPay / (slip.basicPay / slip.totalWorkingDays))
-                    .toStringAsFixed(1)
+                  .toStringAsFixed(1)
               : '0',
         ),
         DoubleCellValue(slip.basicPay),
@@ -122,9 +121,8 @@ class ExportService {
     sheet2.appendRow(bankHeaders);
     for (var i = 0; i < bankHeaders.length; i++) {
       sheet2
-              .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-              .cellStyle =
-          headerStyle;
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .cellStyle = headerStyle;
     }
 
     int serial = 1;
@@ -156,5 +154,74 @@ class ExportService {
     await Share.shareXFiles([
       XFile(file.path),
     ], text: 'Monthly Payroll for $unitName');
+  }
+
+  Future<void> exportAttendanceReport({
+    required List<Map<String, dynamic>> logs,
+    required DateTime startDate,
+    required DateTime endDate,
+    String? unitName,
+  }) async {
+    final excel = Excel.createExcel();
+    final Sheet sheet = excel['Attendance Report'];
+    excel.delete('Sheet1');
+
+    final CellStyle headerStyle = CellStyle(
+      bold: true,
+      backgroundColorHex: ExcelColor.fromHexString('#E0E0E0'),
+      fontFamily: getFontFamily(FontFamily.Arial),
+    );
+
+    final List<CellValue?> headers = [
+      TextCellValue('Date'),
+      TextCellValue('Guard Name'),
+      TextCellValue('Guard Code'),
+      TextCellValue('Unit Name'),
+      TextCellValue('Shift'),
+      TextCellValue('Check In'),
+      TextCellValue('Check Out'),
+      TextCellValue('Status'),
+      TextCellValue('Notes'),
+    ];
+
+    sheet.appendRow(headers);
+    for (var i = 0; i < headers.length; i++) {
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .cellStyle = headerStyle;
+    }
+
+    for (var log in logs) {
+      final guard = log['guards'] ?? {};
+      final unit = log['units'] ?? {};
+
+      sheet.appendRow([
+        TextCellValue(log['attendance_date'] ?? ''),
+        TextCellValue(guard['full_name'] ?? 'Unknown'),
+        TextCellValue(guard['guard_code'] ?? ''),
+        TextCellValue(unit['name'] ?? 'Unknown'),
+        TextCellValue(log['shift'] ?? ''),
+        TextCellValue(log['check_in_time'] ?? ''),
+        TextCellValue(log['check_out_time'] ?? ''),
+        TextCellValue(log['approval_status'] ?? 'PENDING'),
+        TextCellValue(log['approval_notes'] ?? ''),
+      ]);
+    }
+
+    final fileBytes = excel.save();
+    if (fileBytes == null) return;
+
+    final startStr = DateFormat('ddMMMyy').format(startDate);
+    final endStr = DateFormat('ddMMMyy').format(endDate);
+    final fileName =
+        'Attendance_${unitName?.replaceAll(' ', '_') ?? 'All'}_${startStr}_to_$endStr.xlsx';
+
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(fileBytes);
+
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], text: 'Attendance Report ($startStr - $endStr)');
   }
 }
